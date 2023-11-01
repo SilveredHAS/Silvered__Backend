@@ -1,7 +1,34 @@
 const express = require("express");
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const passport = require("passport");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const expressSession = require("express-session");
+const authRoutes = require("./src/routes/authRoutes");
+
 const app = express();
 const port = 5000;
+
+app.use(cors());
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+
+app.use(
+  expressSession({
+    secret: "mysecret",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Initialize passport configuration
+require("./src/config/passport")(passport);
+
+app.use(authRoutes);
 
 // mongodb conn
 const uri =
