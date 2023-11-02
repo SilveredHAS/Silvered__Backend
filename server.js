@@ -9,7 +9,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const app = express();
 const port = 5000;
 
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(
   expressSession({
     secret: "mysecret",
-    resave: false,
+    resave: true,
     saveUninitialized: true,
   })
 );
