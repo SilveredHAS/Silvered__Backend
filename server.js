@@ -4,6 +4,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const expressSession = require("express-session");
 const authRoutes = require("./src/routes/authRoutes");
+const productRoutes = require("./src/routes/productRoutes");
 const connectToMongoDB = require("./src/utils/mongoConnect");
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(passport.session());
 require("./src/config/passportEmailStrategy")(passport);
 
 app.use(authRoutes);
+app.use(productRoutes);
 
 // mongodb conn
 mongoConn = connectToMongoDB();
