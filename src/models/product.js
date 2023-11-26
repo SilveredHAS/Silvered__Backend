@@ -10,53 +10,48 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    category: {
+      type: String,
+      required: true,
+    },
+    variant: {
+      type: String,
+      required: true,
+    },
     ratings: {
       type: Number,
       required: true,
     },
-    details: {
-      material: {
-        type: String,
-        required: true,
-      },
-      pattern: {
-        type: String,
-        required: true,
-      },
-      fit: {
-        type: String,
-        required: true,
-      },
-      color: {
-        type: String,
-        required: true,
-      },
-      sleeve: {
-        type: String,
-        required: true,
-      },
+    material: {
+      type: String,
+      required: true,
+    },
+    pattern: {
+      type: String,
+      required: true,
+    },
+    color: {
+      type: String,
+      required: true,
+    },
+    fit: {
+      type: String,
+      required: true,
+    },
+    sleeve: {
+      type: String,
+      required: true,
+    },
+    gsm: {
+      type: String,
+      required: true,
     },
     price: {
       type: Number,
       required: true,
     },
-    category: {
-      type: String,
-      required: true,
-    },
-    inventory: {
-      quantity: {
-        type: Number,
-        default: 0,
-      },
-      status: {
-        type: String,
-        enum: ["in_stock", "out_of_stock"],
-        default: "in_stock",
-      },
-    },
     images: {
-      type: [String], // Array of image URLs
+      type: [String],
       default: [],
       required: true,
     },
