@@ -14,10 +14,10 @@ const createProduct = async (req, res) => {
     // });
 
     const newProduct = new Product({
-      name: "Orange Henley TShirt",
-      description: "Slim tshirt for boys",
-      price: 4,
-      ratings: 1,
+      name: "Yellow RoundNeck TShirt",
+      description: "Nice tshirt for boys",
+      price: 5,
+      ratings: 3,
       details: {
         material: "Nylon",
         pattern: "Printed",
@@ -27,10 +27,11 @@ const createProduct = async (req, res) => {
       },
       category: "tshirt",
       images: [
-        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck.jpg?alt=media&token=0cd9f0a1-2345-48a4-9174-cbcdcfd38fa5",
-        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FTShirtImage.jpg?alt=media&token=9e830fd5-f851-4a91-8891-c8001c5964d5",
-        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FRoundNeck.jpg?alt=media&token=2a7bc4d8-3b9c-499c-8d5e-64dcb7a259f5",
-        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FCollar.jpg?alt=media&token=7b75644a-e7fa-4bab-8fa2-ccbd56f77072",
+        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2FFRONT.jpg?alt=media&token=73ced109-27bc-40b9-bbb5-85de55aa00d8",
+        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2FBACK.jpg?alt=media&token=de7cc905-0e33-4466-8e50-fa1d975e9a58",
+        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2F51HRwYnffwL._SX679_.jpg?alt=media&token=d603bd5d-80ac-4b97-8d5a-4489118cb802",
+        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2Faa79a4c78077db300c941085d9a02953.jpg?alt=media&token=ba962bc8-93dc-45a3-9445-fd10e910f8e3",
+        "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2Fmoc.jpg?alt=media&token=ba071fc2-2832-4d69-ab9c-5d6c222d3719",
       ],
       // other fields as needed
     });
@@ -57,4 +58,27 @@ const getAllProductsByCategory = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getAllProductsByCategory };
+const deleteProductById = async (req, res) => {
+  const productId = req.params.id; // Get product ID from request parameters
+  console.log("Product ID is ", productId);
+  try {
+    // Find the product by ID and delete it
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+
+    if (!deletedProduct) {
+      console.log("Product Not Found!");
+      return res.status(404).json({ message: "Product not found" });
+    }
+    console.log("Product deleted successfully");
+    res
+      .status(200)
+      .json({ message: "Product deleted successfully", deletedProduct });
+  } catch (error) {
+    console.log("Could not delete product");
+    res
+      .status(500)
+      .json({ error: "Could not delete product", message: error.message });
+  }
+};
+
+module.exports = { createProduct, getAllProductsByCategory, deleteProductById };
