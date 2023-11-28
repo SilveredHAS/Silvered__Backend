@@ -65,30 +65,6 @@ const createProduct = async (req, res) => {
       ],
     });
 
-    // const newProduct = new Product({
-    //   name: "Yellow RoundNeck TShirt",
-    //   description: "Nice tshirt for boys",
-    //   price: 5,
-    //   ratings: 3,
-    //   details: {
-    //     material: "Nylon",
-    //     pattern: "Printed",
-    //     fit: "Stomach Fit",
-    //     color: "Orange",
-    //     sleeve: "Half",
-    //   },
-    //   category: "tshirt",
-    //   variant: "RoundNeck",
-    //   images: [
-    //     "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2FFRONT.jpg?alt=media&token=73ced109-27bc-40b9-bbb5-85de55aa00d8",
-    //     "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2FBACK.jpg?alt=media&token=de7cc905-0e33-4466-8e50-fa1d975e9a58",
-    //     "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2F51HRwYnffwL._SX679_.jpg?alt=media&token=d603bd5d-80ac-4b97-8d5a-4489118cb802",
-    //     "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2Faa79a4c78077db300c941085d9a02953.jpg?alt=media&token=ba962bc8-93dc-45a3-9445-fd10e910f8e3",
-    //     "https://firebasestorage.googleapis.com/v0/b/silvered.appspot.com/o/Ecommerce_Store%2FTshirts%2FVNeck_Full_Sleeve%2Fmoc.jpg?alt=media&token=ba071fc2-2832-4d69-ab9c-5d6c222d3719",
-    //   ],
-    //   // other fields as needed
-    // });
-
     // Save the new product to the database
     const savedProduct = await newProduct.save();
     console.log(savedProduct);
@@ -136,4 +112,37 @@ const deleteProductById = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getAllProductsByCategory, deleteProductById };
+const updateProductById = async (req, res) => {
+  try {
+    console.log("Inside Update Product By Id Controller");
+    const productId = req.params.id;
+    const updateData = req.body; // Data to update from request body
+    console.log("The Product Id is ", productId);
+    console.log("The Update Product Data is ", updateData);
+    // Find the product by ID and update its details
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      updateData,
+      { new: true } // To return the updated product
+    );
+
+    if (!updatedProduct) {
+      console.log("Product Not Found");
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Respond with the updated product details
+    console.log("The Product Updated Successfully!");
+    return res.status(200).json({ product: updatedProduct });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  createProduct,
+  getAllProductsByCategory,
+  deleteProductById,
+  updateProductById,
+};
