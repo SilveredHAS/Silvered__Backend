@@ -78,12 +78,53 @@ const createProduct = async (req, res) => {
 const getAllProductsByCategory = async (req, res) => {
   try {
     console.log("Inside GetAllProductsByCategory Controller");
-    const category = req.query.category; // Get category from the query parameter
-    console.log("Category is ", category);
-    // Find products by the provided category
-    const products = await Product.find({ category });
-    console.log("Products are ", products);
-    res.status(200).json(products); // Send back the products as JSON
+    console.log("Req body is ", req.body);
+    const {
+      category,
+      variant,
+      material,
+      pattern,
+      fit,
+      color,
+      sleeve,
+      priceRange,
+    } = req.body;
+
+    let query = {};
+
+    // Build the query object based on the provided filters
+    if (category && Array.isArray(category) && category.length !== 0) {
+      query.category = { $in: category };
+    }
+    if (variant && Array.isArray(variant) && variant.length !== 0) {
+      query.variant = { $in: variant };
+    }
+    if (material && Array.isArray(material) && material.length !== 0) {
+      query.material = { $in: material };
+    }
+    if (pattern && Array.isArray(pattern) && pattern.length !== 0) {
+      query.pattern = { $in: pattern };
+    }
+    if (fit && Array.isArray(fit) && fit.length !== 0) {
+      query.fit = { $in: fit };
+    }
+    if (color && Array.isArray(color) && color.length !== 0) {
+      query.color = { $in: color };
+    }
+    if (sleeve && Array.isArray(sleeve) && sleeve.length !== 0) {
+      query.sleeve = { $in: sleeve };
+    }
+    // if (priceRange && Array.isArray(priceRange)) {
+    //   const parsedPrices = price.map((p) => parseInt(p));
+    //   query.price = { $in: parsedPrices };
+    // }
+
+    // Execute the query with the filters
+    console.log("Final Query is ", query);
+    const filteredProducts = await Product.find(query);
+    console.log("Filtered Products are ", filteredProducts);
+
+    res.status(200).json(filteredProducts); // Send back the products as JSON
   } catch (error) {
     res.status(500).json({ error: "Could not fetch products" });
   }
