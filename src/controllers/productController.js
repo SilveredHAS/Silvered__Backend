@@ -88,9 +88,11 @@ const getAllProductsByCategory = async (req, res) => {
       color,
       sleeve,
       priceRange,
+      sortBy,
     } = req.body;
 
     let query = {};
+    let sortCriteria = {};
 
     // Build the query object based on the provided filters
     if (category && Array.isArray(category) && category.length !== 0) {
@@ -119,9 +121,21 @@ const getAllProductsByCategory = async (req, res) => {
     //   query.price = { $in: parsedPrices };
     // }
 
+    //sort criteria
+    if (sortBy === "Price:Low to High") {
+      sortCriteria = { price: 1 }; // Sort by price ascending
+    } else if (sortBy === "Price:High to Low") {
+      sortCriteria = { price: -1 }; // Sort by price ascending
+    } else if (sortBy === "Ratings") {
+      sortCriteria = { ratings: -1 }; // Sort by ratings descending
+    } else if (sortBy === "New Arrivals") {
+      sortCriteria = { createdAt: -1 }; // Sort by time (assuming 'createdAt' field)
+    }
+
     // Execute the query with the filters
     console.log("Final Query is ", query);
-    const filteredProducts = await Product.find(query);
+    console.log("Sort Criteria is ", sortCriteria);
+    const filteredProducts = await Product.find(query).sort(sortCriteria);
     console.log("Filtered Products are ", filteredProducts);
 
     res.status(200).json(filteredProducts); // Send back the products as JSON
