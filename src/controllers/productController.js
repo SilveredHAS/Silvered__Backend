@@ -89,8 +89,10 @@ const getAllProductsByCategory = async (req, res) => {
       sleeve,
       priceRange,
       sortBy,
+      pageNo,
     } = req.body;
-
+    const itemsPerPage = 20;
+    const itemsToSkip = (pageNo - 1) * itemsPerPage;
     let query = {};
     let sortCriteria = {};
 
@@ -135,10 +137,21 @@ const getAllProductsByCategory = async (req, res) => {
     // Execute the query with the filters
     console.log("Final Query is ", query);
     console.log("Sort Criteria is ", sortCriteria);
-    const filteredProducts = await Product.find(query).sort(sortCriteria);
+    const filteredProducts = await Product.find(query)
+      .sort(sortCriteria)
+      .limit(parseInt(itemsPerPage))
+      .skip(parseInt(itemsToSkip))
+      .exec();
     console.log("Filtered Products are ", filteredProducts);
-
-    res.status(200).json(filteredProducts); // Send back the products as JSON
+    const totalProducts = await Product.find(query).countDocuments().exec();
+    console.log("Total Products are ", totalProducts);
+    const totalPages = Math.ceil(totalProducts / itemsPerPage);
+    console.log("Total Pages are ", totalPages);
+    console.log("Current Page No is ", pageNo);
+    res.status(200).json({
+      products: filteredProducts,
+      totalPages: totalPages,
+    }); // Send back the products as JSON
   } catch (error) {
     res.status(500).json({ error: "Could not fetch products" });
   }
