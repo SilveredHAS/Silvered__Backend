@@ -1,16 +1,18 @@
 const passport = require("passport");
 const axios = require("axios");
+const User = require("../models/user");
 
 // Controller function for Google authentication callback
-const emailLoginAuthentication = (req, res, next) => {
+const loginAuthentication = (req, res, next) => {
+  console.log("Inside loginAuthentication function in authController.js");
   passport.authenticate("custom-local", (err, user, info) => {
     if (err) {
       return res.status(500).json({ message: "Internal server error" });
     }
     if (
       info.message ===
-        "The entered Email/Mobile do not exist. Please Sign up into Silvered" ||
-      info.message === "Please enter correct Email/Mobile and Password"
+        "The entered Mobile do not exist. Please Sign up into Silvered" ||
+      info.message === "Please enter correct mobile number and Password"
     ) {
       return res.status(401).json({ message: info.message });
     }
@@ -45,6 +47,32 @@ const emailRegisterAuthentication = async (req, res) => {
     console.log("Registration Failed");
     console.log(error);
     res.status(500).json({ message: "Registration failed" });
+  }
+};
+
+const checkValidMobileNumber = async (req, res) => {
+  try {
+    const { mobileNumber } = req.body;
+    console.log("Inside auth/register route");
+    console.log("Req Body is ", req.body);
+
+    // Check if the email or mobile number already exists in the database
+    const existingUser = await User.findOne({ mobileNumber });
+
+    if (existingUser) {
+      console.log("User account already exists");
+      return res.status(200).json({
+        isValid: true,
+      });
+    } else {
+      return res.status(200).json({
+        isValid: false,
+      });
+    }
+  } catch (error) {
+    console.log("Mobile Verification Failed");
+    console.log(error);
+    res.status(500).json({ message: "Mobile Verification failed" });
   }
 };
 
@@ -126,10 +154,11 @@ const sendOTP = (req, res) => {
 };
 
 module.exports = {
-  emailLoginAuthentication,
+  loginAuthentication,
   emailRegisterAuthentication,
   verifyOtpAndRegister,
   logoutUser,
   checkCurrentUser,
   sendOTP,
+  checkValidMobileNumber,
 };

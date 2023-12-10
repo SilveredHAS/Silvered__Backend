@@ -6,22 +6,18 @@ module.exports = (passport) => {
   passport.use(
     "custom-local",
     new LocalStrategy(
-      { usernameField: "emailOrMobile" },
+      { usernameField: "mobileNumber" },
       async (identifier, password, done) => {
         try {
           console.log("In Custom Local Strategy");
-          const user = await User.findOne({
-            $or: [
-              { email: identifier }, // Check if input matches an email in the database
-              { mobileNumber: identifier }, // Check if input matches a mobile number in the database
-            ],
-          });
+          console.log("Identifier is ", identifier);
+          const user = await User.findOne({ mobileNumber: identifier });
 
           if (!user) {
             console.log("User not found");
             return done(null, false, {
               message:
-                "The entered Email/Mobile do not exist. Please Sign up into Silvered",
+                "The entered Mobile do not exist. Please Sign up into Silvered",
             });
           }
 
@@ -29,7 +25,7 @@ module.exports = (passport) => {
           if (!passwordMatch) {
             console.log("Invalid password");
             return done(null, false, {
-              message: "Please enter correct Email/Mobile and Password",
+              message: "Please enter correct mobile number and Password",
             });
           }
           console.log("User Logged in Successfully!");
