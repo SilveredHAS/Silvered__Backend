@@ -1,6 +1,9 @@
 const passport = require("passport");
 const axios = require("axios");
 const User = require("../models/user");
+const request = require("request");
+const { GenerateSixDigitOTP } = require("../utils/generateOtp");
+const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
 
 // Controller function for Google authentication callback
 const loginAuthentication = (req, res, next) => {
@@ -53,7 +56,7 @@ const emailRegisterAuthentication = async (req, res) => {
 const checkValidMobileNumber = async (req, res) => {
   try {
     const { mobileNumber } = req.body;
-    console.log("Inside auth/register route");
+    console.log("Inside checkValidMobileNumber route handler");
     console.log("Req Body is ", req.body);
 
     // Check if the email or mobile number already exists in the database
@@ -103,6 +106,37 @@ const verifyOtpAndRegister = async (req, res) => {
   }
 };
 
+const verifyOtp = async (req, res) => {
+  try {
+    console.log("Req body of verifyOtp is ", req.body);
+    const { mobileNumber, otp } = req.body;
+    const user = await User.findOne({ mobileNumber });
+    const otpFromDb = user.otp;
+    if (user.isOtpActive === false) {
+      console.log("OTP Expired! Please generate new otp to continue");
+      return res.status(200).json({
+        isVerified: false,
+        message: "OTP Expired! Please generate new otp to continue",
+      });
+    } else if (otpFromDb === otp) {
+      console.log("OTP Verified Successfully");
+      SetOTPInactiveAfterFiveMinutes(mobileNumber, otp, 2000);
+      return res
+        .status(200)
+        .json({ isVerified: true, message: "OTP Verified Successfully" });
+    } else {
+      console.log("Incorrect OTP! Please enter correct OTP.");
+      return res.status(200).json({
+        isVerified: false,
+        message: "Incorrect OTP! Please enter correct OTP.",
+      });
+    }
+  } catch (error) {
+    console.log("Error : Verify OTP Failed:", error);
+    return res.status(500).json({ message: "Verify OTP Failed" });
+  }
+};
+
 const logoutUser = (req, res) => {
   req.logout((err) => {
     if (!err) {
@@ -129,34 +163,61 @@ const checkCurrentUser = (req, res) => {
   }
 };
 
-const sendOTP = (req, res) => {
-  const options = {
-    method: "POST",
-    url: "https://control.msg91.com/api/v5/otp?template_id=1&mobile=919790082418&otp_length=6",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-      authkey: "410614ARKo5S5jFiiY656246deP1",
-    },
-    data: { Param1: "value1", Param2: "value2", Param3: "value3" },
-  };
+const sendOTP = async (req, res) => {
+  try {
+    console.log("Inside sendOTP route controller");
+    const { mobileNumber } = req.body;
+    console.log("Mobile Number from frontend is ", mobileNumber);
+    const otp = GenerateSixDigitOTP();
+    console.log("Generated OTP is ", otp);
+    const user = await User.findOne({ mobileNumber });
 
-  axios
-    .request(options)
-    .then(function (response) {
-      console.log("The response from send otp api request is ", response.data);
-      res.status(200).json({ message: response.data });
-    })
-    .catch(function (error) {
-      console.error(error);
-      res.status(500).json({ message: error });
+    // Update the user's OTP field
+    user.otp = otp;
+    user.isOtpActive = true;
+    await user.save();
+    console.log("OTP saved in db successfully ");
+    SetOTPInactiveAfterFiveMinutes(otp, mobileNumber);
+
+    const options = {
+      method: "GET",
+      url: `https://api.authkey.io/request?authkey=665dfb34d6f620d9&mobile=${mobileNumber}&country_code=91&sid=10995&name=Silvered&otp=${otp}&company=Silvered Account`,
+    };
+
+    request(options, function (error, response, body) {
+      console.log("Response Body is");
+      console.log(response);
+      console.log(response.body);
+      if (error) {
+        console.log("Error while sending OTP");
+        return res.status(500).json({
+          isSuccess: false,
+        });
+      }
+      if (response.body.includes("Submitted Successfully")) {
+        console.log("OTP Sent Successfully!");
+        return res.status(200).json({
+          isSuccess: true,
+        });
+      } else {
+        console.log("Could not send OTP");
+        return res.status(200).json({
+          isSuccess: false,
+        });
+      }
     });
+  } catch (error) {
+    console.log("Send OTP Failed");
+    console.log(error);
+    res.status(500).json({ message: "Error while sending OTP" });
+  }
 };
 
 module.exports = {
   loginAuthentication,
   emailRegisterAuthentication,
   verifyOtpAndRegister,
+  verifyOtp,
   logoutUser,
   checkCurrentUser,
   sendOTP,
