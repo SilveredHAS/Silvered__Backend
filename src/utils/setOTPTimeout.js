@@ -7,8 +7,11 @@ const SetOTPInactiveAfterFiveMinutes = (
 ) => {
   setTimeout(async () => {
     try {
-      const user = await User.findById(mobileNumber);
-
+      console.log(
+        `Inside SetOTPInactiveAfterFiveMinutes function and otp is ${otp} and mobile Number is ${mobileNumber} and timeOut is ${timeOut}`
+      );
+      const user = await User.findOne({ mobileNumber });
+      console.log("User is ", user);
       if (!user) {
         console.error("User not found");
         return;

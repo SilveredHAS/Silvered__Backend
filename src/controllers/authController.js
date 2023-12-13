@@ -1,5 +1,6 @@
 const passport = require("passport");
 const axios = require("axios");
+const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 const request = require("request");
 const { GenerateSixDigitOTP } = require("../utils/generateOtp");
@@ -111,6 +112,7 @@ const verifyOtp = async (req, res) => {
     console.log("Req body of verifyOtp is ", req.body);
     const { mobileNumber, otp } = req.body;
     const user = await User.findOne({ mobileNumber });
+    console.log("User in verifyOtp controller is ", user);
     const otpFromDb = user.otp;
     if (user.isOtpActive === false) {
       console.log("OTP Expired! Please generate new otp to continue");
@@ -120,7 +122,7 @@ const verifyOtp = async (req, res) => {
       });
     } else if (otpFromDb === otp) {
       console.log("OTP Verified Successfully");
-      SetOTPInactiveAfterFiveMinutes(mobileNumber, otp, 2000);
+      SetOTPInactiveAfterFiveMinutes(otp, mobileNumber, 1500);
       return res
         .status(200)
         .json({ isVerified: true, message: "OTP Verified Successfully" });
@@ -213,6 +215,34 @@ const sendOTP = async (req, res) => {
   }
 };
 
+const updatePassword = async (req, res) => {
+  try {
+    console.log("Inside update Password route controller");
+    const { mobileNumber, password } = req.body;
+    console.log("Req body is ", req.body);
+    const user = await User.findOne({ mobileNumber });
+
+    if (!user) {
+      return res
+        .status(200)
+        .json({ isSuccess: false, message: "User not found" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 15);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ isSuccess: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.log("Update Password Failed");
+    console.log(error);
+    return res
+      .status(500)
+      .json({ isSuccess: false, message: "Password update failed" });
+  }
+};
+
 module.exports = {
   loginAuthentication,
   emailRegisterAuthentication,
@@ -222,4 +252,5 @@ module.exports = {
   checkCurrentUser,
   sendOTP,
   checkValidMobileNumber,
+  updatePassword,
 };
