@@ -2,6 +2,7 @@ const passport = require("passport");
 const axios = require("axios");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
+const OTPRegister = require("../models/otpRegister");
 const request = require("request");
 const { GenerateSixDigitOTP } = require("../utils/generateOtp");
 const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
@@ -28,29 +29,25 @@ const loginAuthentication = (req, res, next) => {
   })(req, res, next);
 };
 
-const emailRegisterAuthentication = async (req, res) => {
+const registerAuthentication = async (req, res) => {
   try {
-    const { mobileNumber, email } = req.body;
-    console.log("Inside auth/register route");
-    console.log("Req Body is ", req.body);
+    const { fullName, mobileNumber, password } = req.body;
+    console.log("Req body of verify otp and register is ", req.body);
 
-    // Check if the email or mobile number already exists in the database
-    const existingUser = await User.findOne({
-      $or: [{ email }, { mobileNumber }],
+    // Now create the new user account
+    const hashedPassword = await bcrypt.hash(password, 15);
+    console.log("Hashed Password is ", hashedPassword);
+    const user = new User({
+      fullName,
+      mobileNumber,
+      password: hashedPassword,
     });
-
-    if (existingUser) {
-      console.log("User account already exists");
-      return res.status(409).json({
-        message: "User account already exists. Please log in to your account",
-      });
-    }
-    console.log("New Account!");
-    res.status(200).json({ message: "New Account!" });
+    await user.save();
+    console.log("Account created successfully!");
+    res.status(200).json({ message: "Registered successfully!" });
   } catch (error) {
-    console.log("Registration Failed");
-    console.log(error);
-    res.status(500).json({ message: "Registration failed" });
+    console.log("Registration Failed:", error);
+    res.status(500).json({ message: "Registration Failed" });
   }
 };
 
@@ -80,38 +77,11 @@ const checkValidMobileNumber = async (req, res) => {
   }
 };
 
-const verifyOtpAndRegister = async (req, res) => {
-  try {
-    const { fullName, mobileNumber, email, password, verifiedOTP } = req.body;
-    console.log("Req body of verify otp and register is ", req.body);
-    // Verify the provided OTP (compare with the stored OTP, for example)
-    // For demonstration, let's assume the verifiedOTP matches the stored OTP
-
-    // ... your OTP verification logic ...
-
-    // Now create the new user account
-    const hashedPassword = await bcrypt.hash(password, 15);
-    console.log("Hashed Password is ", hashedPassword);
-    const user = new User({
-      fullName,
-      mobileNumber,
-      email,
-      password: hashedPassword,
-    });
-    await user.save();
-    console.log("Account created successfully!");
-    res.status(200).json({ message: "Registered successfully!" });
-  } catch (error) {
-    console.log("Registration Failed:", error);
-    res.status(500).json({ message: "Registration Failed" });
-  }
-};
-
 const verifyOtp = async (req, res) => {
   try {
     console.log("Req body of verifyOtp is ", req.body);
     const { mobileNumber, otp } = req.body;
-    const user = await User.findOne({ mobileNumber });
+    const user = await OTPRegister.findOne({ mobileNumber });
     console.log("User in verifyOtp controller is ", user);
     const otpFromDb = user.otp;
     if (user.isOtpActive === false) {
@@ -172,12 +142,15 @@ const sendOTP = async (req, res) => {
     console.log("Mobile Number from frontend is ", mobileNumber);
     const otp = GenerateSixDigitOTP();
     console.log("Generated OTP is ", otp);
-    const user = await User.findOne({ mobileNumber });
+    const updateOtp = await OTPRegister.findOneAndUpdate(
+      { mobileNumber }, // Search criteria
+      {
+        otp,
+        isOtpActive: true,
+      },
+      { upsert: true, new: true } // Upsert option to create if not found
+    );
 
-    // Update the user's OTP field
-    user.otp = otp;
-    user.isOtpActive = true;
-    await user.save();
     console.log("OTP saved in db successfully ");
     SetOTPInactiveAfterFiveMinutes(otp, mobileNumber);
 
@@ -245,8 +218,7 @@ const updatePassword = async (req, res) => {
 
 module.exports = {
   loginAuthentication,
-  emailRegisterAuthentication,
-  verifyOtpAndRegister,
+  registerAuthentication,
   verifyOtp,
   logoutUser,
   checkCurrentUser,

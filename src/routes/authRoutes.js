@@ -2,9 +2,8 @@ const express = require("express");
 const router = express.Router();
 const {
   loginAuthentication,
-  emailRegisterAuthentication,
+  registerAuthentication,
   verifyOtp,
-  verifyOtpAndRegister,
   logoutUser,
   checkCurrentUser,
   sendOTP,
@@ -13,8 +12,7 @@ const {
 } = require("../controllers/authController");
 
 router.post("/auth/login", loginAuthentication);
-router.post("/auth/register", emailRegisterAuthentication);
-router.post("/auth/verify-otp-and-register", verifyOtpAndRegister);
+router.post("/auth/register", registerAuthentication);
 router.post("/auth/verify-otp", verifyOtp);
 router.get("/logout", logoutUser);
 router.post("/check-valid-mobile", checkValidMobileNumber);

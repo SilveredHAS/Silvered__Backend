@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const OTPRegister = require("../models/otpRegister");
 
 const SetOTPInactiveAfterFiveMinutes = (
   otp,
@@ -10,7 +10,7 @@ const SetOTPInactiveAfterFiveMinutes = (
       console.log(
         `Inside SetOTPInactiveAfterFiveMinutes function and otp is ${otp} and mobile Number is ${mobileNumber} and timeOut is ${timeOut}`
       );
-      const user = await User.findOne({ mobileNumber });
+      const user = await OTPRegister.findOne({ mobileNumber });
       console.log("User is ", user);
       if (!user) {
         console.error("User not found");
