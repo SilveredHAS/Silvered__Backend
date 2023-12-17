@@ -22,7 +22,13 @@ const loginAuthentication = (req, res, next) => {
       return res.status(401).json({ message: info.message });
     }
     if (info.message === "Login Successfull") {
-      return res.status(200).json({ message: info.message });
+      const { mobileNumber } = req.body;
+      const user = User.findOne({ mobileNumber });
+      const userDetails = {
+        fullName: user.fullName,
+        mobileNumber: user.mobileNumber,
+      };
+      return res.status(200).json({ message: info.message, userDetails });
     } else {
       return res.status(500).json({ message: "Login failed" });
     }
@@ -44,7 +50,11 @@ const registerAuthentication = async (req, res) => {
     });
     await user.save();
     console.log("Account created successfully!");
-    res.status(200).json({ message: "Registered successfully!" });
+    const userDetails = {
+      fullName,
+      mobileNumber,
+    };
+    res.status(200).json({ message: "Registered successfully!", userDetails });
   } catch (error) {
     console.log("Registration Failed:", error);
     res.status(500).json({ message: "Registration Failed" });
@@ -92,10 +102,18 @@ const verifyOtp = async (req, res) => {
       });
     } else if (otpFromDb === otp) {
       console.log("OTP Verified Successfully");
+      const user = await User.findOne({ mobileNumber });
+      console.log("User is ", user);
+      const userDetails = {
+        fullName: user ? user.fullName : "",
+        mobileNumber: user ? user.mobileNumber : "",
+      };
       SetOTPInactiveAfterFiveMinutes(otp, mobileNumber, 1500);
-      return res
-        .status(200)
-        .json({ isVerified: true, message: "OTP Verified Successfully" });
+      return res.status(200).json({
+        isVerified: true,
+        message: "OTP Verified Successfully",
+        userDetails,
+      });
     } else {
       console.log("Incorrect OTP! Please enter correct OTP.");
       return res.status(200).json({

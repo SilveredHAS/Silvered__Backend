@@ -208,9 +208,25 @@ const updateProductById = async (req, res) => {
   }
 };
 
+const getProductById = async (req, res) => {
+  try {
+    console.log("Inside getProductById Controller");
+    const productId = req.params.id;
+    console.log("Product id is ", req.params.id);
+    const product = await Product.findById(productId);
+    console.log("Found product is ", product);
+    return res.status(200).json({
+      product: product,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Could not fetch the product by id" });
+  }
+};
+
 module.exports = {
   createProduct,
   getAllProductsByCategory,
   deleteProductById,
   updateProductById,
+  getProductById,
 };
