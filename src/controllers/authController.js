@@ -10,24 +10,27 @@ const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
 // Controller function for Google authentication callback
 const loginAuthentication = (req, res, next) => {
   console.log("Inside loginAuthentication function in authController.js");
-  passport.authenticate("custom-local", (err, user, info) => {
+  passport.authenticate("custom-local", async (err, user, info) => {
     if (err) {
       return res.status(500).json({ message: "Internal server error" });
-    }
-    if (
+    } else if (
       info.message ===
         "The entered Mobile do not exist. Please Sign up into Silvered" ||
       info.message === "Please enter correct mobile number and Password"
     ) {
       return res.status(401).json({ message: info.message });
-    }
-    if (info.message === "Login Successfull") {
+    } else if (info.message === "Login Successfull") {
       const { mobileNumber } = req.body;
-      const user = User.findOne({ mobileNumber });
+      const user = await User.findOne({ mobileNumber });
       const userDetails = {
         fullName: user.fullName,
         mobileNumber: user.mobileNumber,
       };
+      req.session.user = {
+        fullName: user.fullName,
+        mobileNumber: user.mobileNumber,
+      };
+      console.log("Session data after user login is ", req.session);
       return res.status(200).json({ message: info.message, userDetails });
     } else {
       return res.status(500).json({ message: "Login failed" });
@@ -108,6 +111,12 @@ const verifyOtp = async (req, res) => {
         fullName: user ? user.fullName : "",
         mobileNumber: user ? user.mobileNumber : "",
       };
+      req.session.user = {
+        fullName: userDetails.fullName,
+        mobileNumber: userDetails.mobileNumber,
+        // Other user-related information
+      };
+      console.log("Session data after verifying otp is ", req.session);
       SetOTPInactiveAfterFiveMinutes(otp, mobileNumber, 1500);
       return res.status(200).json({
         isVerified: true,
@@ -128,15 +137,18 @@ const verifyOtp = async (req, res) => {
 };
 
 const logoutUser = (req, res) => {
-  req.logout((err) => {
-    if (!err) {
-      // Logout was successful
-      console.log("Logged Out Successfully!");
-      res.status(200).json({ message: "Logged Out Successfully!" });
-    } else {
-      console.log("Logging Out Failed");
-      console.log(error);
+  console.log("In logout function, session data is ", req.session);
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error destroying session:", err);
       res.status(500).json({ message: "Logging Out failed" });
+    } else {
+      console.log("Logged Out Successfully!");
+      console.log(
+        "In logout function, after logging out, session data is ",
+        req.session
+      );
+      res.status(200).json({ message: "Logged Out Successfully!" }); // Redirect to login or home page after logout
     }
   });
 };

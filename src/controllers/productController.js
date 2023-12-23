@@ -78,6 +78,7 @@ const createProduct = async (req, res) => {
 const getAllProductsByCategory = async (req, res) => {
   try {
     console.log("Inside GetAllProductsByCategory Controller");
+    console.log("Session data in GetAllProductsByCategory is ", req.session);
     console.log("Req body is ", req.body);
     const {
       category,
@@ -211,6 +212,7 @@ const updateProductById = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     console.log("Inside getProductById Controller");
+    console.log("Session data is ", req.session);
     const productId = req.params.id;
     console.log("Product id is ", req.params.id);
     const product = await Product.findById(productId);

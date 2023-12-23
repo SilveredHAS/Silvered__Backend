@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { orderSchema } = require("../models/order");
+const { cartSchema } = require("./cart");
 
 const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
@@ -10,6 +11,7 @@ const userSchema = new mongoose.Schema({
   orderHistory: [orderSchema],
   wishlist: [String],
   shippingAddresses: [String],
+  cart: [cartSchema],
   // Add other user properties as needed
 });
 
