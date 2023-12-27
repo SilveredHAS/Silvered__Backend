@@ -35,7 +35,7 @@ app.use(
 );
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(
@@ -50,6 +50,13 @@ app.use(passport.session());
 
 // Initialize passport configuration
 require("./src/config/passportEmailStrategy")(passport);
+
+// app.post("/submit-customize", upload.array("image"), function (req, res, next) {
+//   console.log("Inside submit customize");
+//   console.log(req.files);
+//   console.log(req.body.summaryData);
+//   res.sendStatus(200);
+// });
 
 app.use(authRoutes);
 app.use(productRoutes);

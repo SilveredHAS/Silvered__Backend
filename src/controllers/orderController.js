@@ -179,10 +179,29 @@ const deleteWishlist = async (req, res) => {
   }
 };
 
+const submitCustomize = (req, res) => {
+  try {
+    console.log("Inside submit customize route controller");
+    console.log(req.files);
+    console.log(req.body.summaryData);
+
+    return res
+      .status(200)
+      .json({ isSuccess: true, message: "Successfully Uploaded" });
+  } catch (error) {
+    console.log("Submit Customized Summary Failed");
+    console.log(error);
+    return res
+      .status(500)
+      .json({ isSuccess: false, message: "Submit Customized Summary Failed" });
+  }
+};
+
 module.exports = {
   addOrder,
   getOrderHistory,
   addWishlist,
   getWishList,
   deleteWishlist,
+  submitCustomize,
 };
