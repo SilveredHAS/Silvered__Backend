@@ -6,14 +6,20 @@ const {
   getOrderHistory,
   getWishList,
   addOrder,
+  addToCart,
   addWishlist,
   deleteWishlist,
   submitCustomize,
+  getCartItems,
+  deleteCartItem,
 } = require("../controllers/orderController");
 
 router.get("/order-history", getOrderHistory);
 router.get("/get-wishlist", getWishList);
+router.get("/cart-items", getCartItems);
+router.delete("/delete-cart-items/:id", deleteCartItem);
 router.post("/add-to-orders", addOrder);
+router.post("/add-to-cart", addToCart);
 router.post("/add-to-wishlist", addWishlist);
 router.delete("/delete-wishlist", deleteWishlist);
 router.post("/submit-customize", upload.array("image"), submitCustomize);

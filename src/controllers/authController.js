@@ -25,10 +25,12 @@ const loginAuthentication = (req, res, next) => {
       const userDetails = {
         fullName: user.fullName,
         mobileNumber: user.mobileNumber,
+        cartLength: user.cart.length,
       };
       req.session.user = {
         fullName: user.fullName,
         mobileNumber: user.mobileNumber,
+        cartLength: user.cart.length,
       };
       console.log("Session data after user login is ", req.session);
       return res.status(200).json({ message: info.message, userDetails });

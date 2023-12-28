@@ -6,6 +6,8 @@ const OTPRegister = require("../models/otpRegister");
 const request = require("request");
 const { GenerateSixDigitOTP } = require("../utils/generateOtp");
 const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
+const { sendMail } = require("../utils/sendMail");
+const { generateReceiptId } = require("../utils/generateReceiptId");
 
 const addOrder = async (req, res) => {
   try {
@@ -43,6 +45,48 @@ const addOrder = async (req, res) => {
     return res
       .status(500)
       .json({ isSuccess: false, message: "Add Order failed" });
+  }
+};
+const addToCart = async (req, res) => {
+  try {
+    console.log("Inside add order route controller");
+    const mobileNumber = req.session.user.mobileNumber;
+    console.log(req.body);
+    const { productId, selectedProductDetails, logoName } = req.body;
+    const cartId = `${
+      req.session.user.mobileNumber
+    }-cart-${generateReceiptId()}`;
+    console.log("Cart Id is ", cartId);
+    const newItem = {
+      cartId: cartId,
+      productId: productId,
+      size: selectedProductDetails.size,
+      quantity: 1,
+      logoName: logoName,
+    };
+    console.log("Req body is ", req.body);
+    const user = await User.findOne({ mobileNumber });
+
+    if (!user) {
+      console.log("User not found");
+      return res
+        .status(404)
+        .json({ isSuccess: false, message: "User not found" });
+    }
+    user.cart = [...user.cart, newItem];
+    await user.save();
+
+    return res.status(200).json({
+      isSuccess: true,
+      message: "Success",
+      cartSize: user.cart.length,
+    });
+  } catch (error) {
+    console.log("Add To Cart Failed");
+    console.log(error);
+    return res
+      .status(500)
+      .json({ isSuccess: false, message: "Add To Cart failed" });
   }
 };
 
@@ -141,6 +185,33 @@ const getWishList = async (req, res) => {
   }
 };
 
+const getCartItems = async (req, res) => {
+  try {
+    console.log("Inside get order history route controller");
+    const mobileNumber = req.session.user.mobileNumber;
+    const user = await User.findOne({ mobileNumber });
+    console.log("User is ", user);
+    if (!user) {
+      console.log("User not found");
+      return res
+        .status(404)
+        .json({ isSuccess: false, message: "User not found" });
+    }
+    console.log("Get Cart Items is ", user.cart);
+    return res.status(200).json({
+      isSuccess: true,
+      message: "Success",
+      cartItems: user.cart,
+    });
+  } catch (error) {
+    console.log("Get Cart Items Failed");
+    console.log(error);
+    return res
+      .status(500)
+      .json({ isSuccess: false, message: "Get Cart Items failed" });
+  }
+};
+
 const deleteWishlist = async (req, res) => {
   try {
     console.log("Inside delete order history route controller");
@@ -183,8 +254,16 @@ const submitCustomize = (req, res) => {
   try {
     console.log("Inside submit customize route controller");
     console.log(req.files);
-    console.log(req.body.summaryData);
-
+    // console.log(req.body.summaryData);
+    let files = req.files;
+    let summaryData = req.body.summaryData;
+    console.log("Summary Data is ", summaryData);
+    let mobileNumber = req.session.user.mobileNumber;
+    setTimeout(
+      () =>
+        sendMail("New Customization Request", summaryData, files, mobileNumber),
+      2000
+    );
     return res
       .status(200)
       .json({ isSuccess: true, message: "Successfully Uploaded" });
@@ -197,6 +276,36 @@ const submitCustomize = (req, res) => {
   }
 };
 
+const deleteCartItem = async (req, res) => {
+  try {
+    console.log("Inside delete a cart item controller in order routes");
+    const cartId = req.params.id;
+    console.log("Cart ID is ", cartId);
+    const mobileNumber = req.session.user.mobileNumber;
+    console.log("Mobile Number is ", mobileNumber);
+    const user = await User.findOne({
+      mobileNumber: req.session.user.mobileNumber,
+    });
+
+    if (!user) {
+      console.log("User Not Found!");
+      return res.status(404).json({ message: "User not found" });
+    }
+    console.log(user.cart);
+    user.cart = user.cart.filter((item) => item.cartId !== cartId);
+    await user.save();
+    console.log("Cart Item deleted successfully");
+    return res
+      .status(200)
+      .json({ message: "Cart Item deleted successfully", deletedProduct });
+  } catch (error) {
+    console.log("Could not delete cart item");
+    return res
+      .status(500)
+      .json({ error: "Could not delete cart item", message: error.message });
+  }
+};
+
 module.exports = {
   addOrder,
   getOrderHistory,
@@ -204,4 +313,7 @@ module.exports = {
   getWishList,
   deleteWishlist,
   submitCustomize,
+  addToCart,
+  getCartItems,
+  deleteCartItem,
 };

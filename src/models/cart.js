@@ -2,8 +2,11 @@ const mongoose = require("mongoose");
 
 const cartSchema = new mongoose.Schema(
   {
+    cartId: String,
     productId: String,
+    size: String,
     quantity: Number,
+    logoName: String,
   },
   { timestamps: true }
 );
