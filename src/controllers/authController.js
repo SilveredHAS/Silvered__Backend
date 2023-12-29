@@ -2,42 +2,80 @@ const passport = require("passport");
 const axios = require("axios");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
-const OTPRegister = require("../models/otpRegister");
 const request = require("request");
 const { GenerateSixDigitOTP } = require("../utils/generateOtp");
 const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
 
 // Controller function for Google authentication callback
 const loginAuthentication = (req, res, next) => {
-  console.log("Inside loginAuthentication function in authController.js");
-  passport.authenticate("custom-local", async (err, user, info) => {
-    if (err) {
-      return res.status(500).json({ message: "Internal server error" });
-    } else if (
-      info.message ===
-        "The entered Mobile do not exist. Please Sign up into Silvered" ||
-      info.message === "Please enter correct mobile number and Password"
-    ) {
-      return res.status(401).json({ message: info.message });
-    } else if (info.message === "Login Successfull") {
-      const { mobileNumber } = req.body;
-      const user = await User.findOne({ mobileNumber });
-      const userDetails = {
-        fullName: user.fullName,
-        mobileNumber: user.mobileNumber,
-        cartLength: user.cart.length,
-      };
-      req.session.user = {
-        fullName: user.fullName,
-        mobileNumber: user.mobileNumber,
-        cartLength: user.cart.length,
-      };
-      console.log("Session data after user login is ", req.session);
-      return res.status(200).json({ message: info.message, userDetails });
-    } else {
-      return res.status(500).json({ message: "Login failed" });
+  try {
+    console.log("Inside loginAuthentication function in authController.js");
+    console.log("Reqbody is ", req.body);
+    const loginType = req.body.type;
+    if (loginType === "password") {
+      passport.authenticate("custom-local", async (err, user, info) => {
+        if (err) {
+          return res.status(500).json({ message: "Internal server error" });
+        } else if (
+          info.message ===
+            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+          info.message === "Please enter correct mobile number and Password"
+        ) {
+          return res.status(401).json({ message: info.message });
+        } else if (info.message === "Login Successfull") {
+          const { mobileNumber } = req.body;
+          const user = await User.findOne({ mobileNumber });
+          console.log("Req is ", req.user);
+          console.log("Req is ", req.isAuthenticated());
+          console.log("Req is ", req.session);
+          req.session.user = {
+            isAuthenticated: true,
+            fullName: user.fullName,
+            mobileNumber: user.mobileNumber,
+            cartLength: user.cart.length,
+          };
+          console.log("Session data after user login is ", req.session);
+          return res
+            .status(200)
+            .json({ message: info.message, userDetails: req.session.user });
+        } else {
+          return res.status(500).json({ message: "Login failed" });
+        }
+      })(req, res, next);
+    } else if (loginType === "OTP") {
+      passport.authenticate("otp", async (err, user, info) => {
+        if (err) {
+          return res.status(500).json({ message: "Internal server error" });
+        } else if (
+          info.message ===
+            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+          info.message === "OTP Expired! Please generate new otp to continue" ||
+          info.message === "Incorrect OTP! Please enter correct OTP."
+        ) {
+          return res.status(401).json({ message: info.message });
+        } else if (info.message === "OTP Verified Successfully") {
+          const { mobileNumber } = req.body;
+          const user = await User.findOne({ mobileNumber });
+          req.session.user = {
+            isAuthenticated: true,
+            fullName: user.fullName,
+            mobileNumber: user.mobileNumber,
+            cartLength: user.cart.length,
+          };
+          console.log("Session data after user login is ", req.session);
+          return res
+            .status(200)
+            .json({ message: info.message, userDetails: req.session.user });
+        } else {
+          return res.status(500).json({ message: "Login failed" });
+        }
+      })(req, res, next);
     }
-  })(req, res, next);
+  } catch (error) {
+    console.log("Login Failed");
+    console.log(error);
+    res.status(500).json({ message: "Login Failed" });
+  }
 };
 
 const registerAuthentication = async (req, res) => {
@@ -139,6 +177,7 @@ const verifyOtp = async (req, res) => {
 };
 
 const logoutUser = (req, res) => {
+  console.log("In logout function, req is ", req);
   console.log("In logout function, session data is ", req.session);
   req.session.destroy((err) => {
     if (err) {
@@ -156,14 +195,14 @@ const logoutUser = (req, res) => {
 };
 
 const checkCurrentUser = (req, res) => {
-  if (req.isAuthenticated()) {
+  if (req.session.user.isAuthenticated) {
     // If the user is authenticated, send their details
     console.log("The user is Authenticated");
-    res.json({ message: req.user });
+    res.status(200).json({ userDetails: req.session.user });
   } else {
     // If the user is not authenticated, send an empty object or an appropriate response
     console.log("The user is not Authenticated");
-    res.json({ message: "Unauthorized" });
+    res.status(401).json({ userDetails: null });
   }
 };
 

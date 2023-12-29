@@ -8,18 +8,18 @@ const getOrderId = async (req, res) => {
   try {
     console.log("Inside getOrderId function in payment controller");
     console.log("In getOrderId function, session data is ", req.session);
-    console.log("Request Session data is ", req.session);
+    console.log("Req.body is ", req.body);
     let generatedReceiptId = generateReceiptId();
     console.log("Generated Receipt Id is ", generatedReceiptId);
     let receiptId = req.session.user.mobileNumber + "-" + generatedReceiptId;
     console.log("Receipt Id is ", receiptId);
-    let amount = 500;
+
     let instance = new Razorpay({
       key_id: "rzp_test_OOM7hGgD0wmUx5",
       key_secret: "GSkeBUV8MK2dVWnzSU2AkAHw",
     });
     let options = {
-      amount: amount, // amount in the smallest currency unit
+      amount: req.body.price, // amount in the smallest currency unit
       currency: "INR",
       receipt: receiptId,
     };

@@ -35,8 +35,9 @@ app.use(
 );
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 
 app.use(
   cors({
@@ -49,14 +50,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Initialize passport configuration
-require("./src/config/passportEmailStrategy")(passport);
-
-// app.post("/submit-customize", upload.array("image"), function (req, res, next) {
-//   console.log("Inside submit customize");
-//   console.log(req.files);
-//   console.log(req.body.summaryData);
-//   res.sendStatus(200);
-// });
+require("./src/config/passportPasswordStrategy")(passport);
+require("./src/config/passportOTPStrategy")(passport);
 
 app.use(authRoutes);
 app.use(productRoutes);

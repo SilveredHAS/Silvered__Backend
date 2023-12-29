@@ -29,6 +29,7 @@ module.exports = (passport) => {
             });
           }
           console.log("User Logged in Successfully!");
+
           return done(null, user, { message: "Login Successfull" });
         } catch (error) {
           return done(error);
@@ -46,19 +47,4 @@ module.exports = (passport) => {
     console.log("In deserialize user of local passport strategy");
     done(null, obj);
   });
-
-  //   passport.serializeUser((user, done) => {
-  //     console.log("In serialize user of local passport strategy");
-  //     done(null, user.id);
-  //   });
-
-  //   passport.deserializeUser(async (id, done) => {
-  //     try {
-  //       const user = await User.findById(id);
-  //       console.log("In deserialize user of local passport strategy");
-  //       done(null, user);
-  //     } catch (error) {
-  //       done(error);
-  //     }
-  //   });
 };

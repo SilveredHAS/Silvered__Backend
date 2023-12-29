@@ -52,7 +52,7 @@ const addToCart = async (req, res) => {
     console.log("Inside add order route controller");
     const mobileNumber = req.session.user.mobileNumber;
     console.log(req.body);
-    const { productId, selectedProductDetails, logoName } = req.body;
+    const { productId, selectedProductDetails, logoName, quantity } = req.body;
     const cartId = `${
       req.session.user.mobileNumber
     }-cart-${generateReceiptId()}`;
@@ -61,7 +61,7 @@ const addToCart = async (req, res) => {
       cartId: cartId,
       productId: productId,
       size: selectedProductDetails.size,
-      quantity: 1,
+      quantity: quantity,
       logoName: logoName,
     };
     console.log("Req body is ", req.body);
@@ -159,7 +159,7 @@ const getOrderHistory = async (req, res) => {
 
 const getWishList = async (req, res) => {
   try {
-    console.log("Inside get order history route controller");
+    console.log("Inside get wishlist history route controller");
     const { mobileNumber } = req.query;
     console.log("Req body is ", req.query);
     const user = await User.findOne({ mobileNumber });
@@ -187,7 +187,7 @@ const getWishList = async (req, res) => {
 
 const getCartItems = async (req, res) => {
   try {
-    console.log("Inside get order history route controller");
+    console.log("Inside get cart items route controller");
     const mobileNumber = req.session.user.mobileNumber;
     const user = await User.findOne({ mobileNumber });
     console.log("User is ", user);
@@ -293,16 +293,59 @@ const deleteCartItem = async (req, res) => {
     }
     console.log(user.cart);
     user.cart = user.cart.filter((item) => item.cartId !== cartId);
+    req.session.user.cartLength = user.cart.length;
     await user.save();
     console.log("Cart Item deleted successfully");
-    return res
-      .status(200)
-      .json({ message: "Cart Item deleted successfully", deletedProduct });
+    return res.status(200).json({
+      message: "Cart Item deleted successfully",
+      cartLength: req.session.user.cartLength,
+    });
   } catch (error) {
     console.log("Could not delete cart item");
     return res
       .status(500)
       .json({ error: "Could not delete cart item", message: error.message });
+  }
+};
+
+const updateCart = async (req, res) => {
+  try {
+    console.log("Inside Update Cart By Id Controller");
+    console.log(req.params);
+    console.log(req.body);
+    const cartId = req.params.id;
+    const newQuantity = req.body.quantity; // Data to update from request body
+    console.log("The cart Id is ", cartId);
+    console.log("The quantity is ", newQuantity);
+
+    const user = await User.findOne({
+      mobileNumber: req.session.user.mobileNumber,
+    });
+    console.log("The update cart user is ", user);
+    if (user) {
+      // Update the cartArray element's quantity
+      user.cart = user.cart.map((cartItem) => {
+        console.log("CartItem User is ", cartItem.cartId);
+        console.log("CartItem from request is ", cartId);
+        if (cartItem.cartId === cartId) {
+          console.log("Inside If");
+          return {
+            ...cartItem,
+            quantity: newQuantity,
+          };
+        }
+        return cartItem;
+      });
+      await user.save();
+      console.log("Saved");
+    }
+
+    // Respond with the updated product details
+    console.log("The Cart Updated Successfully!");
+    return res.status(200).json({ cart: user.cart });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -316,4 +359,5 @@ module.exports = {
   addToCart,
   getCartItems,
   deleteCartItem,
+  updateCart,
 };
