@@ -1,4 +1,5 @@
 const express = require("express");
+const dotenv = require("dotenv");
 const passport = require("passport");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -10,9 +11,10 @@ const paymentRoutes = require("./src/routes/paymentRoutes");
 const connectToMongoDB = require("./src/utils/mongoConnect");
 const mongoose = require("mongoose");
 const MongoStore = require("connect-mongo");
+dotenv.config({ path: ".env" });
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 // mongodb conn
 mongoConn = connectToMongoDB();
@@ -20,6 +22,7 @@ mongoConn = connectToMongoDB();
 app.use(
   session({
     secret: "mysecret",
+    proxy: true,
     resave: true,
     saveUninitialized: true,
     cookie: {

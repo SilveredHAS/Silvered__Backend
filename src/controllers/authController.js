@@ -195,7 +195,8 @@ const logoutUser = (req, res) => {
 };
 
 const checkCurrentUser = (req, res) => {
-  if (req.session.user.isAuthenticated) {
+  console.log("Inside CheckCurrent User and Session data is ", req.session);
+  if (req.session && req.session.user && req.session.user.isAuthenticated) {
     // If the user is authenticated, send their details
     console.log("The user is Authenticated");
     res.status(200).json({ userDetails: req.session.user });
