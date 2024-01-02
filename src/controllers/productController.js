@@ -16,6 +16,9 @@ const createProduct = async (req, res) => {
       sleeve,
       price,
       gsm,
+      discount,
+      isCustomized,
+      ratings,
       frontImageUrl,
       backImageUrl,
       womenImageUrl,
@@ -35,6 +38,9 @@ const createProduct = async (req, res) => {
       sleeve,
       price,
       gsm,
+      discount,
+      isCustomized,
+      ratings,
       frontImageUrl,
       backImageUrl,
       womenImageUrl,
@@ -56,6 +62,10 @@ const createProduct = async (req, res) => {
       sleeve,
       price,
       gsm,
+      discount,
+      sellingPrice: price - (price * discount) / 100,
+      isCustomized,
+      ratings,
       images: [
         frontImageUrl,
         backImageUrl,
@@ -185,7 +195,9 @@ const updateProductById = async (req, res) => {
   try {
     console.log("Inside Update Product By Id Controller");
     const productId = req.params.id;
-    const updateData = req.body; // Data to update from request body
+    let updateData = req.body; // Data to update from request body
+    updateData.sellingPrice =
+      updateData.price - (updateData.price * updateData.discount) / 100;
     console.log("The Product Id is ", productId);
     console.log("The Update Product Data is ", updateData);
     // Find the product by ID and update its details
@@ -216,7 +228,7 @@ const getProductById = async (req, res) => {
     const productId = req.params.id;
     console.log("Product id is ", req.params.id);
     const product = await Product.findById(productId);
-    console.log("Found product is ", product);
+    // console.log("Found product is ", product);
     return res.status(200).json({
       product: product,
     });

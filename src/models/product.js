@@ -50,9 +50,16 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    discount: {
+      type: Number,
+      required: true,
+    },
+    sellingPrice: {
+      type: Number,
+      required: true,
+    },
     isCustomized: {
-      type: Boolean,
-      default: false,
+      type: String,
       required: true,
     },
     images: {
