@@ -109,7 +109,7 @@ const verifyPayment = async (req, res) => {
         // Handle error
         console.error("Error updating payment details:", error);
       });
-    res.redirect("http://localhost:3000/success");
+    res.redirect("http://www.silvered.store/success");
   } catch (error) {
     console.log("Verify Payment Failed");
     console.log(error);

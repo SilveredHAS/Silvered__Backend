@@ -5,6 +5,7 @@ const User = require("../models/user");
 const request = require("request");
 const { GenerateSixDigitOTP } = require("../utils/generateOtp");
 const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
+const OTPRegister = require("../models/otpRegister");
 
 // Controller function for Google authentication callback
 const loginAuthentication = (req, res, next) => {
@@ -12,7 +13,9 @@ const loginAuthentication = (req, res, next) => {
     console.log("Inside loginAuthentication function in authController.js");
     console.log("Reqbody is ", req.body);
     const loginType = req.body.type;
+
     if (loginType === "password") {
+      console.log("Inside loginType password");
       passport.authenticate("custom-local", async (err, user, info) => {
         if (err) {
           return res.status(500).json({ message: "Internal server error" });
@@ -42,9 +45,13 @@ const loginAuthentication = (req, res, next) => {
           return res.status(500).json({ message: "Login failed" });
         }
       })(req, res, next);
-    } else if (loginType === "OTP") {
-      passport.authenticate("otp", async (err, user, info) => {
+    } else if (loginType === "otp") {
+      console.log("Inside loginType otp");
+      passport.authenticate("custom-otp", async (err, user, info) => {
+        console.log(err);
+        console.log(info);
         if (err) {
+          console.log("error inside custom otp and error is ", err);
           return res.status(500).json({ message: "Internal server error" });
         } else if (
           info.message ===
@@ -93,11 +100,18 @@ const registerAuthentication = async (req, res) => {
     });
     await user.save();
     console.log("Account created successfully!");
-    const userDetails = {
-      fullName,
-      mobileNumber,
+
+    req.session.user = {
+      isAuthenticated: true,
+      fullName: fullName,
+      mobileNumber: mobileNumber,
+      cartLength: 0,
     };
-    res.status(200).json({ message: "Registered successfully!", userDetails });
+    console.log("Session data after user login is ", req.session);
+    return res.status(200).json({
+      message: "Registered successfully!",
+      userDetails: req.session.user,
+    });
   } catch (error) {
     console.log("Registration Failed:", error);
     res.status(500).json({ message: "Registration Failed" });
@@ -179,6 +193,7 @@ const verifyOtp = async (req, res) => {
 const logoutUser = (req, res) => {
   console.log("In logout function, req is ", req);
   console.log("In logout function, session data is ", req.session);
+  // req.session.user.isAuthenticated = false;
   req.session.destroy((err) => {
     if (err) {
       console.error("Error destroying session:", err);
