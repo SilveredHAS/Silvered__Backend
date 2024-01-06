@@ -204,7 +204,7 @@ const logoutUser = (req, res) => {
         "In logout function, after logging out, session data is ",
         req.session
       );
-      res.status(200).json({ message: "Logged Out Successfully!" }); // Redirect to login or home page after logout
+      res.status(200).json({ message: "Logged Out Successfully!" });
     }
   });
 };

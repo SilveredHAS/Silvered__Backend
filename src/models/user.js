@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   wishlist: [String],
   shippingAddresses: [String],
   cart: [cartSchema],
+  customization: String,
   // Add other user properties as needed
 });
 

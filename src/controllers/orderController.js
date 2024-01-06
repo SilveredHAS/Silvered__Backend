@@ -185,6 +185,35 @@ const getWishList = async (req, res) => {
   }
 };
 
+const getCustomization = async (req, res) => {
+  try {
+    console.log("Inside get customization route controller");
+    const { mobileNumber } = req.session.user;
+    console.log(req.session);
+    console.log(mobileNumber);
+    const user = await User.findOne({ mobileNumber });
+    console.log("User is ", user);
+    if (!user) {
+      console.log("User not found");
+      return res
+        .status(404)
+        .json({ isSuccess: false, message: "User not found" });
+    }
+    console.log("Get Customization is ", user.customization);
+    return res.status(200).json({
+      isSuccess: true,
+      message: "Success",
+      customizeItem: user.customization,
+    });
+  } catch (error) {
+    console.log("Get Customization Failed");
+    console.log(error);
+    return res
+      .status(500)
+      .json({ isSuccess: false, message: "Get Customization failed" });
+  }
+};
+
 const getCartItems = async (req, res) => {
   try {
     console.log("Inside get cart items route controller");
@@ -360,4 +389,5 @@ module.exports = {
   getCartItems,
   deleteCartItem,
   updateCart,
+  getCustomization,
 };

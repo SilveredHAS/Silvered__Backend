@@ -36,6 +36,7 @@ app.use(
     }),
   })
 );
+console.log(process.env.FRONTEND_URL);
 
 // app.use(bodyParser.json());
 app.use(bodyParser.json({ limit: "50mb" }));
@@ -46,8 +47,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use(
   cors({
-    // origin: "http://localhost:3000",
-    origin: "https://www.silvered.store",
+    origin: `${process.env.FRONTEND_URL}`,
     credentials: true,
   })
 );

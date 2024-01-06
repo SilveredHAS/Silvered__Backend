@@ -18,11 +18,14 @@ const {
   getCartItems,
   deleteCartItem,
   updateCart,
+  getCustomization,
 } = require("../controllers/orderController");
+const { authenticationMiddleware } = require("../middleware/authMiddleware");
 
 router.get("/order-history", getOrderHistory);
 router.get("/get-wishlist", getWishList);
-router.get("/cart-items", getCartItems);
+router.get("/get-customization", getCustomization);
+router.post("/cart-items", authenticationMiddleware, getCartItems);
 router.delete("/delete-cart-items/:id", deleteCartItem);
 router.post("/add-to-orders", addOrder);
 router.put("/update-cart/:id", updateCart);

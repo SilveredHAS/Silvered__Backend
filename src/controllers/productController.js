@@ -1,4 +1,5 @@
 const Product = require("../models/product");
+const User = require("../models/user");
 
 // Controller function to create a new product
 const createProduct = async (req, res) => {
@@ -18,6 +19,7 @@ const createProduct = async (req, res) => {
       gsm,
       discount,
       isCustomized,
+      userMobile,
       ratings,
       frontImageUrl,
       backImageUrl,
@@ -40,6 +42,7 @@ const createProduct = async (req, res) => {
       gsm,
       discount,
       isCustomized,
+      userMobile,
       ratings,
       frontImageUrl,
       backImageUrl,
@@ -77,8 +80,24 @@ const createProduct = async (req, res) => {
 
     // Save the new product to the database
     const savedProduct = await newProduct.save();
+    const savedProductId = savedProduct._id;
     console.log(savedProduct);
     console.log("Product Created Successfully!");
+
+    if (isCustomized === "Yes" && userMobile !== "") {
+      const user = await User.findOne({ mobileNumber: userMobile });
+      if (user) {
+        user.customization = savedProductId;
+        await user.save();
+      } else {
+        res
+          .status(401)
+          .json({
+            message:
+              "Prdouct Created Successfully, but User does not exist. Please enter correct mobile number",
+          });
+      }
+    }
     res.status(200).json(savedProduct); // Send back the saved product as JSON
   } catch (error) {
     res.status(500).json({ error: "Could not create the product" });
