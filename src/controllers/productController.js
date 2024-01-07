@@ -1,5 +1,6 @@
 const Product = require("../models/product");
 const User = require("../models/user");
+const CryptoJS = require("crypto-js");
 
 // Controller function to create a new product
 const createProduct = async (req, res) => {
@@ -90,15 +91,18 @@ const createProduct = async (req, res) => {
         user.customization = savedProductId;
         await user.save();
       } else {
-        res
-          .status(401)
-          .json({
-            message:
-              "Prdouct Created Successfully, but User does not exist. Please enter correct mobile number",
-          });
+        res.status(401).json({
+          message:
+            "Prdouct Created Successfully, but User does not exist. Please enter correct mobile number",
+        });
       }
     }
-    res.status(200).json(savedProduct); // Send back the saved product as JSON
+    // res.status(200).json(savedProduct);
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(savedProduct),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
   } catch (error) {
     res.status(500).json({ error: "Could not create the product" });
   }
@@ -178,10 +182,16 @@ const getAllProductsByCategory = async (req, res) => {
     const totalPages = Math.ceil(totalProducts / itemsPerPage);
     console.log("Total Pages are ", totalPages);
     console.log("Current Page No is ", pageNo);
-    res.status(200).json({
+
+    const sensitiveData = {
       products: filteredProducts,
       totalPages: totalPages,
-    }); // Send back the products as JSON
+    };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
   } catch (error) {
     res.status(500).json({ error: "Could not fetch products" });
   }
@@ -199,9 +209,18 @@ const deleteProductById = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
     console.log("Product deleted successfully");
-    res
-      .status(200)
-      .json({ message: "Product deleted successfully", deletedProduct });
+    // res
+    //   .status(200)
+    //   .json({ message: "Product deleted successfully", deletedProduct });
+    const sensitiveData = {
+      message: "Product deleted successfully",
+      deletedProduct,
+    };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
   } catch (error) {
     console.log("Could not delete product");
     res
@@ -233,7 +252,13 @@ const updateProductById = async (req, res) => {
 
     // Respond with the updated product details
     console.log("The Product Updated Successfully!");
-    return res.status(200).json({ product: updatedProduct });
+    // return res.status(200).json({ product: updatedProduct });
+    const sensitiveData = { product: updatedProduct };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
   } catch (error) {
     console.error("Error updating product:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -248,9 +273,15 @@ const getProductById = async (req, res) => {
     console.log("Product id is ", req.params.id);
     const product = await Product.findById(productId);
     // console.log("Found product is ", product);
-    return res.status(200).json({
-      product: product,
-    });
+    const sensitiveData = { product: product };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
+    // return res.status(200).json({
+    //   product: product,
+    // });
   } catch (error) {
     res.status(500).json({ error: "Could not fetch the product by id" });
   }

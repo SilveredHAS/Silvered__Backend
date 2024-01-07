@@ -14,7 +14,7 @@ const authenticationMiddleware = (req, res, next) => {
     const redirectURL = `/login`;
     console.log(redirectURL);
 
-    res.status(303).json({ redirectURL: redirectURL });
+    res.redirect("https://www.silvered.store/login");
   }
 };
 

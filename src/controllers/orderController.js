@@ -8,6 +8,7 @@ const { GenerateSixDigitOTP } = require("../utils/generateOtp");
 const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
 const { sendMail } = require("../utils/sendMail");
 const { generateReceiptId } = require("../utils/generateReceiptId");
+const CryptoJS = require("crypto-js");
 
 const addOrder = async (req, res) => {
   try {
@@ -93,10 +94,12 @@ const addToCart = async (req, res) => {
 const addWishlist = async (req, res) => {
   try {
     console.log("Inside add to wishlist route controller");
-    const { mobileNumber, productId } = req.body;
+    const { productId } = req.body;
     console.log("Req body is ", req.body);
-    const user = await User.findOne({ mobileNumber });
-    console.log("User is ", user);
+    const user = await User.findOne({
+      mobileNumber: req.session.user.mobileNumber,
+    });
+    // console.log("User is ", user);
     if (!user) {
       console.log("User not found");
       return res
@@ -105,20 +108,37 @@ const addWishlist = async (req, res) => {
     }
     console.log("Product Id is ", productId);
     const userId = user._id;
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $push: { wishlist: productId } },
-      { new: true } // To return the updated user document
-    );
-    if (updatedUser) {
-      console.log(
-        "Wishlist Item added successfully and Updated user:",
-        updatedUser
+    if (user && !user.wishlist.includes(productId)) {
+      // If productId doesn't exist in wishlist, perform update
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { wishlist: productId } },
+        { new: true }
       );
-      return res.status(200).json({
-        isSuccess: true,
-        message: "Success",
-      });
+      if (updatedUser) {
+        console.log(
+          "Wishlist Item added successfully and Updated user:",
+          updatedUser
+        );
+        return res.status(200).json({
+          isSuccess: true,
+          message: "Product Added to Wishlist Successfully!",
+        });
+      }
+    } else {
+      // If productId already exists in wishlist, return the user without updating
+      const updatedUser = user;
+      if (updatedUser) {
+        console.log(
+          "Wishlist Item added successfully and Updated user:",
+          updatedUser
+        );
+        return res.status(200).json({
+          isSuccess: true,
+          message: "Product already exists in wishlist!",
+        });
+      }
+      console.log("Updated user is ", updatedUser);
     }
   } catch (error) {
     console.log("Add Wishlist Failed");
@@ -143,11 +163,21 @@ const getOrderHistory = async (req, res) => {
         .json({ isSuccess: false, message: "User not found" });
     }
     console.log("Order History is ", user.orderHistory);
-    return res.status(200).json({
+    const sensitiveData = {
       isSuccess: true,
       message: "Success",
       orderHistory: user.orderHistory,
-    });
+    };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
+    // return res.status(200).json({
+    //   isSuccess: true,
+    //   message: "Success",
+    //   orderHistory: user.orderHistory,
+    // });
   } catch (error) {
     console.log("Get Order History Failed");
     console.log(error);
@@ -171,11 +201,21 @@ const getWishList = async (req, res) => {
         .json({ isSuccess: false, message: "User not found" });
     }
     console.log("Get Wishlist is ", user.wishlist);
-    return res.status(200).json({
+    const sensitiveData = {
       isSuccess: true,
       message: "Success",
       wishlist: user.wishlist,
-    });
+    };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
+    // return res.status(200).json({
+    //   isSuccess: true,
+    //   message: "Success",
+    //   wishlist: user.wishlist,
+    // });
   } catch (error) {
     console.log("Get Wishlist Failed");
     console.log(error);
@@ -200,11 +240,21 @@ const getCustomization = async (req, res) => {
         .json({ isSuccess: false, message: "User not found" });
     }
     console.log("Get Customization is ", user.customization);
-    return res.status(200).json({
+    const sensitiveData = {
       isSuccess: true,
       message: "Success",
       customizeItem: user.customization,
-    });
+    };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
+    // return res.status(200).json({
+    //   isSuccess: true,
+    //   message: "Success",
+    //   customizeItem: user.customization,
+    // });
   } catch (error) {
     console.log("Get Customization Failed");
     console.log(error);
@@ -227,11 +277,21 @@ const getCartItems = async (req, res) => {
         .json({ isSuccess: false, message: "User not found" });
     }
     console.log("Get Cart Items is ", user.cart);
-    return res.status(200).json({
+    const sensitiveData = {
       isSuccess: true,
       message: "Success",
       cartItems: user.cart,
-    });
+    };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
+    // return res.status(200).json({
+    //   isSuccess: true,
+    //   message: "Success",
+    //   cartItems: user.cart,
+    // });
   } catch (error) {
     console.log("Get Cart Items Failed");
     console.log(error);
@@ -371,7 +431,15 @@ const updateCart = async (req, res) => {
 
     // Respond with the updated product details
     console.log("The Cart Updated Successfully!");
-    return res.status(200).json({ cart: user.cart });
+    const sensitiveData = {
+      cart: user.cart,
+    };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
+    // return res.status(200).json({ cart: user.cart });
   } catch (error) {
     console.error("Error updating product:", error);
     return res.status(500).json({ message: "Internal server error" });

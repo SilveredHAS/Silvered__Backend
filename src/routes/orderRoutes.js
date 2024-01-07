@@ -20,17 +20,17 @@ const {
   updateCart,
   getCustomization,
 } = require("../controllers/orderController");
-const { authenticationMiddleware } = require("../middleware/authMiddleware");
+const DecryptMiddleware = require("../middleware/decryptMiddlware");
 
 router.get("/order-history", getOrderHistory);
 router.get("/get-wishlist", getWishList);
 router.get("/get-customization", getCustomization);
-router.post("/cart-items", authenticationMiddleware, getCartItems);
+router.get("/cart-items", getCartItems);
 router.delete("/delete-cart-items/:id", deleteCartItem);
-router.post("/add-to-orders", addOrder);
+router.post("/add-to-orders", DecryptMiddleware, addOrder);
 router.put("/update-cart/:id", updateCart);
-router.post("/add-to-cart", addToCart);
-router.post("/add-to-wishlist", addWishlist);
+router.post("/add-to-cart", DecryptMiddleware, addToCart);
+router.post("/add-to-wishlist", DecryptMiddleware, addWishlist);
 router.delete("/delete-wishlist", deleteWishlist);
 router.post("/submit-customize", upload.array("image"), submitCustomize);
 

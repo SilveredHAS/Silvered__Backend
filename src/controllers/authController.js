@@ -6,6 +6,7 @@ const request = require("request");
 const { GenerateSixDigitOTP } = require("../utils/generateOtp");
 const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
 const OTPRegister = require("../models/otpRegister");
+const CryptoJS = require("crypto-js");
 
 // Controller function for Google authentication callback
 const loginAuthentication = (req, res, next) => {

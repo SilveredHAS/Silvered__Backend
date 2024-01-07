@@ -3,6 +3,7 @@ const User = require("../models/user");
 const { generateReceiptId } = require("../utils/generateReceiptId");
 const { Order } = require("../models/order");
 const { CheckRazorpaySignature } = require("../utils/checkRazorpaySignature");
+const CryptoJS = require("crypto-js");
 
 const getOrderId = async (req, res) => {
   try {
@@ -19,7 +20,7 @@ const getOrderId = async (req, res) => {
       key_secret: "GSkeBUV8MK2dVWnzSU2AkAHw",
     });
     let options = {
-      amount: req.body.price, // amount in the smallest currency unit
+      amount: req.body.price * 100, // amount in the smallest currency unit
       currency: "INR",
       receipt: receiptId,
     };
@@ -41,7 +42,12 @@ const getOrderId = async (req, res) => {
           // Handle the newly created order
           console.log("Newly created Order:", newOrder);
           req.session.user.orderId = order.id;
-          return res.status(200).json(order);
+          const encryptedData = CryptoJS.AES.encrypt(
+            JSON.stringify(order),
+            process.env.SECRET
+          ).toString();
+          res.status(200).json({ encryptedData });
+          // return res.status(200).json(order);
         })
         .catch((error) => {
           // Handle error
@@ -109,7 +115,7 @@ const verifyPayment = async (req, res) => {
         // Handle error
         console.error("Error updating payment details:", error);
       });
-    res.redirect("https://www.silvered.store/success");
+    res.redirect(`${process.env.FRONTEND_URL}/success`);
   } catch (error) {
     console.log("Verify Payment Failed");
     console.log(error);

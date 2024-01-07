@@ -4,6 +4,7 @@ const passport = require("passport");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const session = require("express-session");
+const DecryptMiddleware = require("./src/middleware/decryptMiddlware");
 const authRoutes = require("./src/routes/authRoutes");
 const productRoutes = require("./src/routes/productRoutes");
 const orderRoutes = require("./src/routes/orderRoutes");
@@ -38,13 +39,10 @@ app.use(
 );
 console.log(process.env.FRONTEND_URL);
 
-// app.use(bodyParser.json());
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(express.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.urlencoded({ extended: false }));
-
 app.use(
   cors({
     origin: `${process.env.FRONTEND_URL}`,
