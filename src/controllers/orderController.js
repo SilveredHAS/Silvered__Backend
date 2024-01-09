@@ -9,6 +9,7 @@ const { SetOTPInactiveAfterFiveMinutes } = require("../utils/setOTPTimeout");
 const { sendMail } = require("../utils/sendMail");
 const { generateReceiptId } = require("../utils/generateReceiptId");
 const CryptoJS = require("crypto-js");
+const Product = require("../models/product");
 
 const addOrder = async (req, res) => {
   try {
@@ -154,7 +155,9 @@ const getOrderHistory = async (req, res) => {
     console.log("Inside get order history route controller");
     const { mobileNumber } = req.query;
     console.log("Req body is ", req.query);
-    const user = await User.findOne({ mobileNumber });
+    const user = await User.findOne({ mobileNumber })
+      .lean()
+      .populate("orderHistory");
     console.log("User is ", user);
     if (!user) {
       console.log("User not found");
@@ -163,10 +166,45 @@ const getOrderHistory = async (req, res) => {
         .json({ isSuccess: false, message: "User not found" });
     }
     console.log("Order History is ", user.orderHistory);
+    const ordersWithProducts = await Promise.all(
+      user.orderHistory.map(async (order) => {
+        console.log("Order is ");
+        console.log(order);
+        const productsInOrder = await Promise.all(
+          order.products.map(async (cartItem) => {
+            try {
+              console.log("cartItem is ");
+              console.log(cartItem);
+              const product = await Product.findById(cartItem.productId);
+              if (product) {
+                console.log("Product Item is ");
+                console.log(product);
+                return {
+                  ...cartItem,
+                  productDetails: product, // Include product details in the cart item
+                };
+              } else {
+                return {
+                  ...cartItem,
+                  productDetails: null, // Handle if product not found
+                };
+              }
+            } catch (error) {
+              return {
+                ...cartItem,
+                productDetails: null, // Handle errors fetching product details
+              };
+            }
+          })
+        );
+        return productsInOrder;
+      })
+    );
+
     const sensitiveData = {
       isSuccess: true,
       message: "Success",
-      orderHistory: user.orderHistory,
+      orderHistory: ordersWithProducts,
     };
     const encryptedData = CryptoJS.AES.encrypt(
       JSON.stringify(sensitiveData),
@@ -446,6 +484,29 @@ const updateCart = async (req, res) => {
   }
 };
 
+const getSavedAddress = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      mobileNumber: req.session.user.mobileNumber,
+    });
+
+    const savedAddress = user.shippingAddresses;
+
+    const sensitiveData = {
+      savedAddress: savedAddress,
+    };
+    const encryptedData = CryptoJS.AES.encrypt(
+      JSON.stringify(sensitiveData),
+      process.env.SECRET
+    ).toString();
+    res.status(200).json({ encryptedData });
+    // return res.status(200).json({ cart: user.cart });
+  } catch (error) {
+    console.error("Error getting saved addresses:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   addOrder,
   getOrderHistory,
@@ -458,4 +519,5 @@ module.exports = {
   deleteCartItem,
   updateCart,
   getCustomization,
+  getSavedAddress,
 };

@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   isOtpActive: { type: Boolean },
   orderHistory: [orderSchema],
   wishlist: [String],
-  shippingAddresses: [String],
+  shippingAddresses: [Object],
   cart: [cartSchema],
   customization: String,
   // Add other user properties as needed

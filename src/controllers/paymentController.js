@@ -4,12 +4,14 @@ const { generateReceiptId } = require("../utils/generateReceiptId");
 const { Order } = require("../models/order");
 const { CheckRazorpaySignature } = require("../utils/checkRazorpaySignature");
 const CryptoJS = require("crypto-js");
+const { SendOrderDetailsMail } = require("../utils/sendOrderDetailsMail");
 
 const getOrderId = async (req, res) => {
   try {
     console.log("Inside getOrderId function in payment controller");
     console.log("In getOrderId function, session data is ", req.session);
     console.log("Req.body is ", req.body);
+    const { price, shippingAddress } = req.body;
     let generatedReceiptId = generateReceiptId();
     console.log("Generated Receipt Id is ", generatedReceiptId);
     let receiptId = req.session.user.mobileNumber + "-" + generatedReceiptId;
@@ -20,7 +22,7 @@ const getOrderId = async (req, res) => {
       key_secret: "GSkeBUV8MK2dVWnzSU2AkAHw",
     });
     let options = {
-      amount: req.body.price * 100, // amount in the smallest currency unit
+      amount: price * 100, // amount in the smallest currency unit
       currency: "INR",
       receipt: receiptId,
     };
@@ -37,6 +39,8 @@ const getOrderId = async (req, res) => {
       Order.create({
         orderId: order.id,
         receiptId,
+        totalAmount: price,
+        shippingAddress: shippingAddress,
       })
         .then((newOrder) => {
           // Handle the newly created order
@@ -75,6 +79,7 @@ const getOrderId = async (req, res) => {
 const verifyPayment = async (req, res) => {
   try {
     console.log("The Response from verify payment is ", res);
+    let errorMsg = "";
     const keys = Object.keys(res.req.body);
     console.log("The keys of response is ", keys);
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
@@ -88,6 +93,13 @@ const verifyPayment = async (req, res) => {
       razorpay_signature
     );
     console.log("isRazorpaySignatureValid ", isRazorpaySignatureValid);
+    const user = await User.findOne({
+      mobileNumber: req.session.user.mobileNumber,
+    });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const products = user.cart;
     const fieldsToUpdate = {
       paymentId: razorpay_payment_id,
       razorpayOrderId: razorpay_order_id,
@@ -95,8 +107,13 @@ const verifyPayment = async (req, res) => {
       isPaymentSuccess: true,
       isPaymentVerified: true,
       isPaymentValid: isRazorpaySignatureValid,
+      products: products,
+      status: "Confirmed",
     };
-
+    const order = await Order.findOne({
+      orderId: req.session.user.orderId,
+    }).exec();
+    const orderShippingAddress = order.shippingAddress;
     Order.findOneAndUpdate(
       {
         orderId: req.session.user.orderId,
@@ -106,6 +123,23 @@ const verifyPayment = async (req, res) => {
     )
       .then((updatedOrder) => {
         // Handle the updated order
+        user.cart = [];
+        req.session.user.cartLength = user.cart.length;
+        user.shippingAddresses.push(orderShippingAddress);
+        user.orderHistory.push(updatedOrder);
+        user.save().then((updatedUser) => {
+          console.log(
+            "Updated user after saving payment details:",
+            updatedUser
+          );
+          console.log("Everything completed Successfully!");
+          setTimeout(() => {
+            SendOrderDetailsMail(
+              req.session.user.orderId,
+              req.session.user.mobileNumber
+            );
+          }, 5000);
+        });
         console.log(
           "Updated Order after saving payment details:",
           updatedOrder
@@ -113,6 +147,10 @@ const verifyPayment = async (req, res) => {
       })
       .catch((error) => {
         // Handle error
+        console.log(
+          "The Payment is successfull but the order update failed.. and order id is ",
+          req.session.user.orderId
+        );
         console.error("Error updating payment details:", error);
       });
     res.redirect(`${process.env.FRONTEND_URL}/success`);

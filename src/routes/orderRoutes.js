@@ -19,12 +19,14 @@ const {
   deleteCartItem,
   updateCart,
   getCustomization,
+  getSavedAddress,
 } = require("../controllers/orderController");
 const DecryptMiddleware = require("../middleware/decryptMiddlware");
 
 router.get("/order-history", getOrderHistory);
 router.get("/get-wishlist", getWishList);
 router.get("/get-customization", getCustomization);
+router.get("/get-saved-address", getSavedAddress);
 router.get("/cart-items", getCartItems);
 router.delete("/delete-cart-items/:id", deleteCartItem);
 router.post("/add-to-orders", DecryptMiddleware, addOrder);

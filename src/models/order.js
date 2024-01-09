@@ -5,11 +5,7 @@ const orderSchema = new mongoose.Schema(
   {
     products: [cartSchema],
     orderId: String,
-    dateOfOrder: {
-      type: Date,
-      default: Date.now, // Default value is the current date and time
-      required: true,
-    },
+    dateOfOrder: Date,
     totalAmount: Number,
     paymentId: String,
     receiptId: String,
@@ -20,7 +16,9 @@ const orderSchema = new mongoose.Schema(
     isPaymentVerified: Boolean,
     isPaymentValid: Boolean,
     totalQuantity: Number,
-    shipping_address: String,
+    shippingAddress: {
+      type: Object,
+    },
     status: String,
   },
   { timestamps: true }

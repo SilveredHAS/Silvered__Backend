@@ -37,6 +37,7 @@ const loginAuthentication = (req, res, next) => {
             fullName: user.fullName,
             mobileNumber: user.mobileNumber,
             cartLength: user.cart.length,
+            shippingAddress: user.shippingAddresses,
           };
           console.log("Session data after user login is ", req.session);
           return res
@@ -69,6 +70,7 @@ const loginAuthentication = (req, res, next) => {
             fullName: user.fullName,
             mobileNumber: user.mobileNumber,
             cartLength: user.cart.length,
+            shippingAddress: user.shippingAddresses,
           };
           console.log("Session data after user login is ", req.session);
           return res
@@ -107,6 +109,7 @@ const registerAuthentication = async (req, res) => {
       fullName: fullName,
       mobileNumber: mobileNumber,
       cartLength: 0,
+      shippingAddress: user.shippingAddresses,
     };
     console.log("Session data after user login is ", req.session);
     return res.status(200).json({
@@ -210,11 +213,16 @@ const logoutUser = (req, res) => {
   });
 };
 
-const checkCurrentUser = (req, res) => {
+const checkCurrentUser = async (req, res) => {
   console.log("Inside CheckCurrent User and Session data is ", req.session);
   if (req.session && req.session.user && req.session.user.isAuthenticated) {
     // If the user is authenticated, send their details
     console.log("The user is Authenticated");
+    const user = await User.findOne({
+      mobileNumber: req.session.user.mobileNumber,
+    });
+    req.session.user.cartLength = user.cart.length;
+    req.session.user.shippingAddress = user.shippingAddresses;
     res.status(200).json({ userDetails: req.session.user });
   } else {
     // If the user is not authenticated, send an empty object or an appropriate response
