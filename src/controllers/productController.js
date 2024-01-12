@@ -126,7 +126,7 @@ const getAllProductsByCategory = async (req, res) => {
       pageNo,
     } = req.body;
     const itemsPerPage = 20;
-    const itemsToSkip = (pageNo - 1) * itemsPerPage;
+    const itemsToSkip = pageNo === 0 ? 0 : (pageNo - 1) * itemsPerPage;
     let query = {};
     let sortCriteria = {};
 
