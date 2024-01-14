@@ -58,6 +58,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    priority: {
+      type: Number,
+      required: true,
+    },
     isCustomized: {
       type: String,
       required: true,

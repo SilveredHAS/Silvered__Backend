@@ -167,38 +167,64 @@ const getOrderHistory = async (req, res) => {
     }
     console.log("Order History is ", user.orderHistory);
     const ordersWithProducts = await Promise.all(
-      user.orderHistory.map(async (order) => {
-        console.log("Order is ");
-        console.log(order);
-        const productsInOrder = await Promise.all(
-          order.products.map(async (cartItem) => {
-            try {
-              console.log("cartItem is ");
-              console.log(cartItem);
-              const product = await Product.findById(cartItem.productId);
-              if (product) {
-                console.log("Product Item is ");
-                console.log(product);
+      user.orderHistory
+        .sort((a, b) => b.dateOfOrder - a.dateOfOrder)
+        .map(async (order) => {
+          console.log("Order is ");
+          console.log(order);
+          const productsInOrder = await Promise.all(
+            order.products.map(async (cartItem) => {
+              try {
+                console.log("cartItem is ");
+                console.log(cartItem);
+                const product = await Product.findById(cartItem.productId);
+                if (product) {
+                  console.log("Product Item is ");
+                  console.log(product);
+                  return {
+                    orderDate: order.dateOfOrder.toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }), // Include order date
+                    orderTotal: order.totalAmount,
+                    orderStatus: order.status,
+                    orderId: order.orderId,
+                    ...cartItem,
+                    productDetails: product, // Include product details in the cart item
+                  };
+                } else {
+                  return {
+                    orderDate: order.dateOfOrder.toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }), // Include order date
+                    orderTotal: order.totalAmount,
+                    orderStatus: order.status,
+                    orderId: order.orderId,
+                    ...cartItem,
+                    productDetails: null, // Handle if product not found
+                  };
+                }
+              } catch (error) {
                 return {
+                  orderDate: order.dateOfOrder.toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }), // Include order date
+                  orderTotal: order.totalAmount,
+                  orderStatus: order.status,
+                  orderId: order.orderId,
                   ...cartItem,
-                  productDetails: product, // Include product details in the cart item
-                };
-              } else {
-                return {
-                  ...cartItem,
-                  productDetails: null, // Handle if product not found
+                  productDetails: null, // Handle errors fetching product details
                 };
               }
-            } catch (error) {
-              return {
-                ...cartItem,
-                productDetails: null, // Handle errors fetching product details
-              };
-            }
-          })
-        );
-        return productsInOrder;
-      })
+            })
+          );
+          return productsInOrder;
+        })
     );
 
     const sensitiveData = {
@@ -211,11 +237,6 @@ const getOrderHistory = async (req, res) => {
       process.env.SECRET
     ).toString();
     res.status(200).json({ encryptedData });
-    // return res.status(200).json({
-    //   isSuccess: true,
-    //   message: "Success",
-    //   orderHistory: user.orderHistory,
-    // });
   } catch (error) {
     console.log("Get Order History Failed");
     console.log(error);
@@ -230,7 +251,9 @@ const getWishList = async (req, res) => {
     console.log("Inside get wishlist history route controller");
     const { mobileNumber } = req.query;
     console.log("Req body is ", req.query);
-    const user = await User.findOne({ mobileNumber });
+    const user = await User.findOne({ mobileNumber })
+      .lean()
+      .populate("wishlist");
     console.log("User is ", user);
     if (!user) {
       console.log("User not found");
@@ -239,21 +262,40 @@ const getWishList = async (req, res) => {
         .json({ isSuccess: false, message: "User not found" });
     }
     console.log("Get Wishlist is ", user.wishlist);
+    const productsInWishlist = await Promise.all(
+      user.wishlist.map(async (wishlistItem) => {
+        try {
+          console.log("wishlistItem is ");
+          console.log(wishlistItem);
+          const product = await Product.findById(wishlistItem);
+          if (product) {
+            console.log("Product Item is ");
+            console.log(product);
+            return {
+              productDetails: product,
+            };
+          } else {
+            return {
+              productDetails: null,
+            };
+          }
+        } catch (error) {
+          return {
+            productDetails: null,
+          };
+        }
+      })
+    );
     const sensitiveData = {
       isSuccess: true,
       message: "Success",
-      wishlist: user.wishlist,
+      wishlist: productsInWishlist,
     };
     const encryptedData = CryptoJS.AES.encrypt(
       JSON.stringify(sensitiveData),
       process.env.SECRET
     ).toString();
     res.status(200).json({ encryptedData });
-    // return res.status(200).json({
-    //   isSuccess: true,
-    //   message: "Success",
-    //   wishlist: user.wishlist,
-    // });
   } catch (error) {
     console.log("Get Wishlist Failed");
     console.log(error);
@@ -269,7 +311,9 @@ const getCustomization = async (req, res) => {
     const { mobileNumber } = req.session.user;
     console.log(req.session);
     console.log(mobileNumber);
-    const user = await User.findOne({ mobileNumber });
+    const user = await User.findOne({ mobileNumber })
+      .lean()
+      .populate("customization");
     console.log("User is ", user);
     if (!user) {
       console.log("User not found");
@@ -278,21 +322,21 @@ const getCustomization = async (req, res) => {
         .json({ isSuccess: false, message: "User not found" });
     }
     console.log("Get Customization is ", user.customization);
+    let productsInCustomization = null;
+    if (user.customization) {
+      productsInCustomization = await Product.findById(user.customization);
+    }
+
     const sensitiveData = {
       isSuccess: true,
       message: "Success",
-      customizeItem: user.customization,
+      customizeItem: productsInCustomization,
     };
     const encryptedData = CryptoJS.AES.encrypt(
       JSON.stringify(sensitiveData),
       process.env.SECRET
     ).toString();
     res.status(200).json({ encryptedData });
-    // return res.status(200).json({
-    //   isSuccess: true,
-    //   message: "Success",
-    //   customizeItem: user.customization,
-    // });
   } catch (error) {
     console.log("Get Customization Failed");
     console.log(error);
@@ -306,7 +350,7 @@ const getCartItems = async (req, res) => {
   try {
     console.log("Inside get cart items route controller");
     const mobileNumber = req.session.user.mobileNumber;
-    const user = await User.findOne({ mobileNumber });
+    const user = await User.findOne({ mobileNumber }).lean().populate("cart");
     console.log("User is ", user);
     if (!user) {
       console.log("User not found");
@@ -315,10 +359,37 @@ const getCartItems = async (req, res) => {
         .json({ isSuccess: false, message: "User not found" });
     }
     console.log("Get Cart Items is ", user.cart);
+    const productsInCart = await Promise.all(
+      user.cart.map(async (cartItem) => {
+        try {
+          console.log("cartItem is ");
+          console.log(cartItem);
+          const product = await Product.findById(cartItem.productId);
+          if (product) {
+            console.log("Product Item is ");
+            console.log(product);
+            return {
+              ...cartItem,
+              productDetails: product, // Include product details in the cart item
+            };
+          } else {
+            return {
+              ...cartItem,
+              productDetails: null, // Handle if product not found
+            };
+          }
+        } catch (error) {
+          return {
+            ...cartItem,
+            productDetails: null, // Handle errors fetching product details
+          };
+        }
+      })
+    );
     const sensitiveData = {
       isSuccess: true,
       message: "Success",
-      cartItems: user.cart,
+      cartItems: productsInCart,
     };
     const encryptedData = CryptoJS.AES.encrypt(
       JSON.stringify(sensitiveData),

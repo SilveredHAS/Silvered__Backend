@@ -21,6 +21,7 @@ const createProduct = async (req, res) => {
       discount,
       isCustomized,
       userMobile,
+      priority,
       ratings,
       frontImageUrl,
       backImageUrl,
@@ -44,6 +45,7 @@ const createProduct = async (req, res) => {
       discount,
       isCustomized,
       userMobile,
+      priority,
       ratings,
       frontImageUrl,
       backImageUrl,
@@ -69,6 +71,7 @@ const createProduct = async (req, res) => {
       discount,
       sellingPrice: price - (price * discount) / 100,
       isCustomized,
+      priority,
       ratings,
       images: [
         frontImageUrl,
@@ -121,12 +124,13 @@ const getAllProductsByCategory = async (req, res) => {
       fit,
       color,
       sleeve,
-      priceRange,
+      price,
       sortBy,
       pageNo,
     } = req.body;
     const itemsPerPage = 20;
     const itemsToSkip = pageNo === 0 ? 0 : (pageNo - 1) * itemsPerPage;
+    console.log("Items to skip is ", itemsToSkip);
     let query = {};
     let sortCriteria = {};
 
@@ -152,24 +156,26 @@ const getAllProductsByCategory = async (req, res) => {
     if (sleeve && Array.isArray(sleeve) && sleeve.length !== 0) {
       query.sleeve = { $in: sleeve };
     }
-    // if (priceRange && Array.isArray(priceRange)) {
-    //   const parsedPrices = price.map((p) => parseInt(p));
-    //   query.price = { $in: parsedPrices };
+    // if (price && Array.isArray(price) && price.length !== 0) {
+    //   query.sellingPrice = buildPriceQuery(price);
     // }
 
     //sort criteria
     if (sortBy === "Price:Low to High") {
       sortCriteria = { price: 1 }; // Sort by price ascending
     } else if (sortBy === "Price:High to Low") {
-      sortCriteria = { price: -1 }; // Sort by price ascending
+      sortCriteria = { sellingPrice: -1 }; // Sort by price ascending
     } else if (sortBy === "Ratings") {
       sortCriteria = { ratings: -1 }; // Sort by ratings descending
     } else if (sortBy === "New Arrivals") {
       sortCriteria = { createdAt: -1 }; // Sort by time (assuming 'createdAt' field)
+    } else {
+      sortCriteria = { priority: 1 };
     }
 
     // Execute the query with the filters
     console.log("Final Query is ", query);
+    console.log("Final Query is:", JSON.stringify(query, null, 2));
     console.log("Sort Criteria is ", sortCriteria);
     const filteredProducts = await Product.find(query)
       .sort(sortCriteria)

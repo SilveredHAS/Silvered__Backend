@@ -108,6 +108,7 @@ const verifyPayment = async (req, res) => {
       isPaymentVerified: true,
       isPaymentValid: isRazorpaySignatureValid,
       products: products,
+      dateOfOrder: new Date(),
       status: "Confirmed",
     };
     const order = await Order.findOne({
@@ -125,7 +126,28 @@ const verifyPayment = async (req, res) => {
         // Handle the updated order
         user.cart = [];
         req.session.user.cartLength = user.cart.length;
-        user.shippingAddresses.push(orderShippingAddress);
+        console.log("Shipping Address is ", orderShippingAddress);
+        const existingAddressIndex = user.shippingAddresses.findIndex(
+          (address) => {
+            console.log("Iterative Address is ", address);
+            return (
+              address.firstName === orderShippingAddress.firstName &&
+              address.lastName === orderShippingAddress.lastName &&
+              address.mobileNumber === orderShippingAddress.mobileNumber &&
+              address.houseNo === orderShippingAddress.houseNo &&
+              address.area === orderShippingAddress.area &&
+              address.city === orderShippingAddress.city &&
+              address.state === orderShippingAddress.state &&
+              address.pincode === orderShippingAddress.pincode &&
+              address.landmark === orderShippingAddress.landmark
+            );
+          }
+        );
+        console.log("Existing Address Index is ", existingAddressIndex);
+        if (existingAddressIndex === -1) {
+          // Update the existing address if found
+          user.shippingAddresses.push(orderShippingAddress);
+        }
         user.orderHistory.push(updatedOrder);
         user.save().then((updatedUser) => {
           console.log(
