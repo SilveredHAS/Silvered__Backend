@@ -325,6 +325,7 @@ const getCustomization = async (req, res) => {
     let productsInCustomization = null;
     if (user.customization) {
       productsInCustomization = await Product.findById(user.customization);
+      console.log("Products in customization is ", productsInCustomization);
     }
 
     const sensitiveData = {
@@ -519,7 +520,6 @@ const updateCart = async (req, res) => {
     const user = await User.findOne({
       mobileNumber: req.session.user.mobileNumber,
     });
-    console.log("The update cart user is ", user);
     if (user) {
       // Update the cartArray element's quantity
       user.cart = user.cart.map((cartItem) => {
@@ -535,6 +535,7 @@ const updateCart = async (req, res) => {
         return cartItem;
       });
       await user.save();
+      console.log("The update cart user is ", user);
       console.log("Saved");
     }
 

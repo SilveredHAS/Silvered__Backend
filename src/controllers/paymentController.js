@@ -18,8 +18,8 @@ const getOrderId = async (req, res) => {
     console.log("Receipt Id is ", receiptId);
 
     let instance = new Razorpay({
-      key_id: "rzp_test_OOM7hGgD0wmUx5",
-      key_secret: "GSkeBUV8MK2dVWnzSU2AkAHw",
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
     let options = {
       amount: price * 100, // amount in the smallest currency unit
@@ -134,6 +134,7 @@ const verifyPayment = async (req, res) => {
               address.firstName === orderShippingAddress.firstName &&
               address.lastName === orderShippingAddress.lastName &&
               address.mobileNumber === orderShippingAddress.mobileNumber &&
+              address.email === orderShippingAddress.email &&
               address.houseNo === orderShippingAddress.houseNo &&
               address.area === orderShippingAddress.area &&
               address.city === orderShippingAddress.city &&

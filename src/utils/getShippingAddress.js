@@ -6,6 +6,7 @@ function GetShippingAddress(shippingAddress) {
     firstName,
     lastName,
     mobileNumber,
+    email,
     houseNo,
     area,
     landmark,
@@ -13,7 +14,7 @@ function GetShippingAddress(shippingAddress) {
     state,
     pincode,
   } = shippingAddress;
-  let calcShippingAddress = `${firstName} ${lastName} ${houseNo} ${area} ${landmark} ${city} ${state} -  ${pincode}. Mobile: ${mobileNumber}`;
+  let calcShippingAddress = `${firstName} ${lastName} ${houseNo} ${area} ${landmark} ${city} ${state} -  ${pincode}. Mobile: ${mobileNumber}. Email: ${email}`;
   return calcShippingAddress;
 }
 

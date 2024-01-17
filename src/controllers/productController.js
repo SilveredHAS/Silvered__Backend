@@ -1,6 +1,7 @@
 const Product = require("../models/product");
 const User = require("../models/user");
 const CryptoJS = require("crypto-js");
+const SendCustomizationAlertSMS = require("../utils/sendCustomizationSMSAlert");
 
 // Controller function to create a new product
 const createProduct = async (req, res) => {
@@ -53,6 +54,10 @@ const createProduct = async (req, res) => {
       zoomImageUrl,
       mocupImageUrl
     );
+    console.log("IS customized is ", isCustomized);
+    console.log("IS usermobile is ", userMobile);
+    console.log("IS priority is ", priority);
+    console.log("IS ratings is ", ratings);
 
     // Create a new product instance using the Product model
     const newProduct = new Product({
@@ -85,7 +90,7 @@ const createProduct = async (req, res) => {
     // Save the new product to the database
     const savedProduct = await newProduct.save();
     const savedProductId = savedProduct._id;
-    console.log(savedProduct);
+    console.log("Saved Product is ", savedProduct);
     console.log("Product Created Successfully!");
 
     if (isCustomized === "Yes" && userMobile !== "") {
@@ -93,10 +98,11 @@ const createProduct = async (req, res) => {
       if (user) {
         user.customization = savedProductId;
         await user.save();
+        // setTimeout(() => SendCustomizationAlertSMS(userMobile), 5000);
       } else {
         res.status(401).json({
           message:
-            "Prdouct Created Successfully, but User does not exist. Please enter correct mobile number",
+            "Product Created Successfully, but User does not exist. Please enter correct mobile number",
         });
       }
     }
@@ -137,6 +143,7 @@ const getAllProductsByCategory = async (req, res) => {
     // Build the query object based on the provided filters
     if (category && Array.isArray(category) && category.length !== 0) {
       query.category = { $in: category };
+      query.isCustomized = { $eq: "No" };
     }
     if (variant && Array.isArray(variant) && variant.length !== 0) {
       query.variant = { $in: variant };
@@ -182,7 +189,7 @@ const getAllProductsByCategory = async (req, res) => {
       .limit(parseInt(itemsPerPage))
       .skip(parseInt(itemsToSkip))
       .exec();
-    console.log("Filtered Products are ", filteredProducts);
+    // console.log("Filtered Products are ", filteredProducts);
     const totalProducts = await Product.find(query).countDocuments().exec();
     console.log("Total Products are ", totalProducts);
     const totalPages = Math.ceil(totalProducts / itemsPerPage);
