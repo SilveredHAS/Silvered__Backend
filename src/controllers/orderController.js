@@ -10,6 +10,8 @@ const { sendMail } = require("../utils/sendMail");
 const { generateReceiptId } = require("../utils/generateReceiptId");
 const CryptoJS = require("crypto-js");
 const Product = require("../models/product");
+const fs = require("fs");
+const path = require("path");
 
 const addOrder = async (req, res) => {
   try {
@@ -458,11 +460,44 @@ const submitCustomize = (req, res) => {
     let summaryData = req.body.summaryData;
     console.log("Summary Data is ", summaryData);
     let mobileNumber = req.session.user.mobileNumber;
-    setTimeout(
-      () =>
-        sendMail("New Customization Request", summaryData, files, mobileNumber),
-      2000
+    const relativeTempStorageDir = "../../tempStorage";
+    const tempStorageDir = path.join(__dirname, relativeTempStorageDir);
+    const tempDirForTransaction = path.join(tempStorageDir, mobileNumber);
+
+    // Create a directory for the transaction
+    if (!fs.existsSync(tempDirForTransaction)) {
+      fs.mkdirSync(tempDirForTransaction);
+    }
+
+    // Loop through the array of images and save them to the temporary directory
+    files.forEach((image, index) => {
+      console.log("Image is ", image);
+      console.log(
+        "Image path is ",
+        path.join(tempDirForTransaction, image.originalname)
+      );
+
+      if (files && Array.isArray(files)) {
+        files.forEach((file, index) => {
+          // Use the path property of each file to obtain the file path
+          const filePath = file.path;
+          // Read the file content
+          const fileData = fs.readFileSync(filePath);
+          // Save the file data to the temporary directory with a unique name
+          fs.writeFileSync(
+            path.join(tempDirForTransaction, file.originalname),
+            fileData
+          );
+        });
+      }
+    });
+
+    // Save JSON data to the temporary directory
+    fs.writeFileSync(
+      path.join(tempDirForTransaction, "summaryData.json"),
+      summaryData
     );
+    console.log("Successfully Uploaded Images in Customize");
     return res
       .status(200)
       .json({ isSuccess: true, message: "Successfully Uploaded" });

@@ -1,4 +1,6 @@
 const nodemailer = require("nodemailer");
+const fs = require("fs");
+const path = require("path");
 
 function getCurrentTimestamp() {
   const now = new Date();
@@ -34,8 +36,28 @@ function jsonToHtmlTable(jsonObject, mobileNumber) {
   return html;
 }
 
-const sendMail = (subject, body, files, mobileNumber) => {
+const sendMail = async (mobileNumber) => {
   console.log("Inside send mail function");
+  const relativeTempStorageDir = "../../tempStorage";
+  const tempStorageDir = path.join(__dirname, relativeTempStorageDir);
+  const tempDirForTransaction = path.join(tempStorageDir, mobileNumber);
+  let imageFiles = fs.readdirSync(tempDirForTransaction);
+  console.log(imageFiles);
+
+  imageFiles = imageFiles.filter(
+    (fileName) =>
+      (fileName.endsWith(".png") ||
+        fileName.endsWith(".jpg") ||
+        fileName.endsWith(".jpeg")) &&
+      fileName
+  );
+  console.log(imageFiles);
+
+  const subject = "New Customization Request";
+  const body = fs.readFileSync(
+    path.join(tempDirForTransaction, "summaryData.json"),
+    "utf-8"
+  );
   console.log("JSON Body is ", body);
   const timestamp = getCurrentTimestamp();
   var transporter = nodemailer.createTransport({
@@ -45,16 +67,11 @@ const sendMail = (subject, body, files, mobileNumber) => {
       pass: "wsxg gdbk ophd utbp",
     },
   });
-
-  const attachments = [
-    // Assuming attachments is an array of File objects obtained from the form input
-    // Loop through each File object and convert it to Nodemailer attachment format
-    // This example assumes you have an array named `files` containing your File objects
-    ...files.map((file) => ({
-      filename: file.originalname, // Set the filename to the original file name
-      path: file.path, // Set the file content
-    })),
-  ];
+  console.log("Image Files are ", imageFiles);
+  const attachments = imageFiles.map((fileName) => ({
+    filename: fileName,
+    path: path.join(tempDirForTransaction, fileName),
+  }));
 
   var mailOptions = {
     from: "silveredworkspace@gmail.com",
@@ -69,6 +86,17 @@ const sendMail = (subject, body, files, mobileNumber) => {
       console.log(error);
     } else {
       console.log("Email sent: " + info.response);
+      // fs.rm(tempDirForTransaction, { recursive: true });
+      fs.promises
+        .rm(tempDirForTransaction, { recursive: true }, (error) => {
+          console.log(error);
+        })
+        .then((data) => {
+          console.log(
+            `Temporary storage cleaned up for ${tempDirForTransaction}`
+          );
+        })
+        .catch((err) => console.log(err));
     }
   });
 };

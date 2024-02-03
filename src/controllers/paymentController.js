@@ -5,13 +5,14 @@ const { Order } = require("../models/order");
 const { CheckRazorpaySignature } = require("../utils/checkRazorpaySignature");
 const CryptoJS = require("crypto-js");
 const { SendOrderDetailsMail } = require("../utils/sendOrderDetailsMail");
+const { sendMail } = require("../utils/sendMail");
 
 const getOrderId = async (req, res) => {
   try {
     console.log("Inside getOrderId function in payment controller");
     console.log("In getOrderId function, session data is ", req.session);
     console.log("Req.body is ", req.body);
-    const { price, shippingAddress } = req.body;
+    const { price, shippingAddress, type } = req.body;
     let generatedReceiptId = generateReceiptId();
     console.log("Generated Receipt Id is ", generatedReceiptId);
     let receiptId = req.session.user.mobileNumber + "-" + generatedReceiptId;
@@ -41,6 +42,7 @@ const getOrderId = async (req, res) => {
         receiptId,
         totalAmount: price,
         shippingAddress: shippingAddress,
+        orderType: type === "CUSTOMIZE" ? "customize" : "order",
       })
         .then((newOrder) => {
           // Handle the newly created order
@@ -124,31 +126,34 @@ const verifyPayment = async (req, res) => {
     )
       .then((updatedOrder) => {
         // Handle the updated order
-        user.cart = [];
-        req.session.user.cartLength = user.cart.length;
-        console.log("Shipping Address is ", orderShippingAddress);
-        const existingAddressIndex = user.shippingAddresses.findIndex(
-          (address) => {
-            console.log("Iterative Address is ", address);
-            return (
-              address.firstName === orderShippingAddress.firstName &&
-              address.lastName === orderShippingAddress.lastName &&
-              address.mobileNumber === orderShippingAddress.mobileNumber &&
-              address.email === orderShippingAddress.email &&
-              address.houseNo === orderShippingAddress.houseNo &&
-              address.area === orderShippingAddress.area &&
-              address.city === orderShippingAddress.city &&
-              address.state === orderShippingAddress.state &&
-              address.pincode === orderShippingAddress.pincode &&
-              address.landmark === orderShippingAddress.landmark
-            );
+        if (updatedOrder.orderType === "order") {
+          user.cart = [];
+          req.session.user.cartLength = user.cart.length;
+          console.log("Shipping Address is ", orderShippingAddress);
+          const existingAddressIndex = user.shippingAddresses.findIndex(
+            (address) => {
+              console.log("Iterative Address is ", address);
+              return (
+                address.firstName === orderShippingAddress.firstName &&
+                address.lastName === orderShippingAddress.lastName &&
+                address.mobileNumber === orderShippingAddress.mobileNumber &&
+                address.email === orderShippingAddress.email &&
+                address.houseNo === orderShippingAddress.houseNo &&
+                address.area === orderShippingAddress.area &&
+                address.city === orderShippingAddress.city &&
+                address.state === orderShippingAddress.state &&
+                address.pincode === orderShippingAddress.pincode &&
+                address.landmark === orderShippingAddress.landmark
+              );
+            }
+          );
+          console.log("Existing Address Index is ", existingAddressIndex);
+          if (existingAddressIndex === -1) {
+            // Update the existing address if found
+            user.shippingAddresses.push(orderShippingAddress);
           }
-        );
-        console.log("Existing Address Index is ", existingAddressIndex);
-        if (existingAddressIndex === -1) {
-          // Update the existing address if found
-          user.shippingAddresses.push(orderShippingAddress);
         }
+
         user.orderHistory.push(updatedOrder);
         user.save().then((updatedUser) => {
           console.log(
@@ -157,11 +162,13 @@ const verifyPayment = async (req, res) => {
           );
           console.log("Everything completed Successfully!");
           setTimeout(() => {
-            SendOrderDetailsMail(
-              req.session.user.orderId,
-              req.session.user.mobileNumber
-            );
-          }, 5000);
+            updatedOrder.orderType === "order"
+              ? SendOrderDetailsMail(
+                  req.session.user.orderId,
+                  req.session.user.mobileNumber
+                )
+              : sendMail(req.session.user.mobileNumber);
+          }, 10000);
         });
         console.log(
           "Updated Order after saving payment details:",
@@ -176,7 +183,16 @@ const verifyPayment = async (req, res) => {
         );
         console.error("Error updating payment details:", error);
       });
-    res.redirect(`${process.env.FRONTEND_URL}/success`);
+    const updatedOrder = await Order.findOne({
+      orderId: req.session.user.orderId,
+    }).exec();
+    console.log(
+      "Redirecting to ",
+      `${process.env.FRONTEND_URL}/success?type=${updatedOrder.orderType}`
+    );
+    res.redirect(
+      `${process.env.FRONTEND_URL}/success?type=${updatedOrder.orderType}`
+    );
   } catch (error) {
     console.log("Verify Payment Failed");
     console.log(error);

@@ -5,6 +5,7 @@ const orderSchema = new mongoose.Schema(
   {
     products: [cartSchema],
     orderId: String,
+    orderType: String,
     dateOfOrder: Date,
     totalAmount: Number,
     paymentId: String,
