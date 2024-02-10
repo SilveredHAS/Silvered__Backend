@@ -6,13 +6,15 @@ const { CheckRazorpaySignature } = require("../utils/checkRazorpaySignature");
 const CryptoJS = require("crypto-js");
 const { SendOrderDetailsMail } = require("../utils/sendOrderDetailsMail");
 const { sendMail } = require("../utils/sendMail");
+const { addAffiliateAmount } = require("./authController");
 
 const getOrderId = async (req, res) => {
   try {
     console.log("Inside getOrderId function in payment controller");
     console.log("In getOrderId function, session data is ", req.session);
     console.log("Req.body is ", req.body);
-    const { price, shippingAddress, type } = req.body;
+    const { price, shippingAddress, type, couponCode, couponCodeDiscount } =
+      req.body;
     let generatedReceiptId = generateReceiptId();
     console.log("Generated Receipt Id is ", generatedReceiptId);
     let receiptId = req.session.user.mobileNumber + "-" + generatedReceiptId;
@@ -43,6 +45,9 @@ const getOrderId = async (req, res) => {
         totalAmount: price,
         shippingAddress: shippingAddress,
         orderType: type === "CUSTOMIZE" ? "customize" : "order",
+        isCouponCodeValid: couponCode ? true : false,
+        couponCode: couponCode ? couponCode : null,
+        couponCodeDiscount: couponCode ? couponCodeDiscount : 0,
       })
         .then((newOrder) => {
           // Handle the newly created order
@@ -116,6 +121,9 @@ const verifyPayment = async (req, res) => {
     const order = await Order.findOne({
       orderId: req.session.user.orderId,
     }).exec();
+    const isCouponCodeValid = order.isCouponCodeValid;
+    const couponCode = order.couponCode;
+    const couponCodeDiscount = order.couponCodeDiscount;
     const orderShippingAddress = order.shippingAddress;
     Order.findOneAndUpdate(
       {
@@ -193,6 +201,12 @@ const verifyPayment = async (req, res) => {
     res.redirect(
       `${process.env.FRONTEND_URL}/success?type=${updatedOrder.orderType}`
     );
+    if (isCouponCodeValid) {
+      setTimeout(
+        () => addAffiliateAmount(couponCode, couponCodeDiscount),
+        5000
+      );
+    }
   } catch (error) {
     console.log("Verify Payment Failed");
     console.log(error);

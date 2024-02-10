@@ -56,6 +56,8 @@ app.use(passport.session());
 // Initialize passport configuration
 require("./src/config/passportPasswordStrategy")(passport);
 require("./src/config/passportOTPStrategy")(passport);
+require("./src/config/passportPasswordStrategyAffiliate")(passport);
+require("./src/config/passportOTPStrategyAffiliate")(passport);
 
 app.use(authRoutes);
 app.use(productRoutes);

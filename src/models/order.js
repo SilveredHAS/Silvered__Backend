@@ -17,6 +17,9 @@ const orderSchema = new mongoose.Schema(
     isPaymentVerified: Boolean,
     isPaymentValid: Boolean,
     totalQuantity: Number,
+    isCouponCodeValid: Boolean,
+    couponCode: String,
+    couponCodeDiscount: Number,
     shippingAddress: {
       type: Object,
     },
