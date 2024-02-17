@@ -29,6 +29,9 @@ const createProduct = async (req, res) => {
       womenImageUrl,
       zoomImageUrl,
       mocupImageUrl,
+      designFileUrl1,
+      designFileUrl2,
+      designFileUrl3,
     } = req.body;
 
     console.log(
@@ -52,7 +55,10 @@ const createProduct = async (req, res) => {
       backImageUrl,
       womenImageUrl,
       zoomImageUrl,
-      mocupImageUrl
+      mocupImageUrl,
+      designFileUrl1,
+      designFileUrl2,
+      designFileUrl3
     );
     console.log("IS customized is ", isCustomized);
     console.log("IS usermobile is ", userMobile);
@@ -84,6 +90,9 @@ const createProduct = async (req, res) => {
         womenImageUrl,
         zoomImageUrl,
         mocupImageUrl,
+        designFileUrl1,
+        designFileUrl2,
+        designFileUrl3,
       ],
     });
 

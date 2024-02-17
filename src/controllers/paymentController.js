@@ -47,7 +47,7 @@ const getOrderId = async (req, res) => {
         orderType: type === "CUSTOMIZE" ? "customize" : "order",
         isCouponCodeValid: couponCode ? true : false,
         couponCode: couponCode ? couponCode : null,
-        couponCodeDiscount: couponCode ? couponCodeDiscount : 0,
+        couponCodeDiscount: couponCode ? 0.1 * (price - 100) : 0,
       })
         .then((newOrder) => {
           // Handle the newly created order

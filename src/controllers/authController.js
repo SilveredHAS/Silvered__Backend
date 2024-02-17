@@ -538,8 +538,12 @@ const checkCurrentUser = async (req, res) => {
     const user = await User.findOne({
       mobileNumber: req.session.user.mobileNumber,
     });
-    req.session.user.cartLength = user.cart.length;
-    req.session.user.shippingAddress = user.shippingAddresses;
+    if (user) {
+      req.session.user.cartLength = user.cart && user.cart.length;
+      req.session.user.shippingAddress =
+        user.shippingAddresses && user.shippingAddresses;
+    }
+
     res.status(200).json({ userDetails: req.session.user });
   } else {
     // If the user is not authenticated, send an empty object or an appropriate response
@@ -549,7 +553,10 @@ const checkCurrentUser = async (req, res) => {
 };
 
 const checkCurrentUserAffiliate = async (req, res) => {
-  console.log("Inside CheckCurrent User and Session data is ", req.session);
+  console.log(
+    "Inside checkCurrentUserAffiliate User and Session data is ",
+    req.session
+  );
   if (req.session && req.session.user && req.session.user.isAuthenticated) {
     // If the user is authenticated, send their details
     console.log("The user is Authenticated");

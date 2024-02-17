@@ -56,7 +56,7 @@ const addToCart = async (req, res) => {
     console.log("Inside add order route controller");
     const mobileNumber = req.session.user.mobileNumber;
     console.log(req.body);
-    const { productId, selectedProductDetails, logoName, quantity } = req.body;
+    const { productId, logoName, quantity, detailedQuantity } = req.body;
     const cartId = `${
       req.session.user.mobileNumber
     }-cart-${generateReceiptId()}`;
@@ -64,8 +64,8 @@ const addToCart = async (req, res) => {
     const newItem = {
       cartId: cartId,
       productId: productId,
-      size: selectedProductDetails.size,
       quantity: quantity,
+      detailedQuantity: detailedQuantity,
       logoName: logoName,
     };
     console.log("Req body is ", req.body);
@@ -171,6 +171,7 @@ const getOrderHistory = async (req, res) => {
     const ordersWithProducts = await Promise.all(
       user.orderHistory
         .sort((a, b) => b.dateOfOrder - a.dateOfOrder)
+        .filter((order) => order.orderType && order.orderType !== "customize")
         .map(async (order) => {
           console.log("Order is ");
           console.log(order);

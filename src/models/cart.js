@@ -6,6 +6,7 @@ const cartSchema = new mongoose.Schema(
     productId: String,
     size: String,
     quantity: Number,
+    detailedQuantity: Object,
     logoName: String,
   },
   { timestamps: true }
