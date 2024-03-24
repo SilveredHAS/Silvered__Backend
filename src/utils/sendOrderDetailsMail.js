@@ -3,6 +3,14 @@ const { Order } = require("../models/order");
 const Product = require("../models/product");
 const GetShippingAddress = require("./getShippingAddress");
 
+function formattedSize(detailedQuantity) {
+  return detailedQuantity
+    ? Object.entries(item.detailedQuantity)
+        .map(([key, value]) => `${key}-${value}`)
+        .join(", ")
+    : "";
+}
+
 function getCurrentTimestamp() {
   const now = new Date();
 
@@ -47,8 +55,9 @@ function jsonToHtmlTable(productDetails, cartDetails) {
       : "";
   });
 
-  table += `<tr><td>Size</td><td>${cartDetails.size}</td></tr>`;
-  table += `<tr><td>Quantity</td><td>${cartDetails.quantity}</td></tr>`;
+  table += `<tr><td>Size</td><td>${formattedSize(
+    cartDetails.detailedQuantity
+  )}</td></tr>`;
   table += `<tr><td>Logo Name</td><td>${cartDetails.logoName}</td></tr>`;
 
   table += "</table>";

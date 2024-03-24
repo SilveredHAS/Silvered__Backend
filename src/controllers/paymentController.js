@@ -93,6 +93,7 @@ const verifyPayment = async (req, res) => {
     console.log("The Response from verify payment is ", res);
     let errorMsg = "";
     const keys = Object.keys(res.req.body);
+    const origin = req.get("Origin");
     console.log("The keys of response is ", keys);
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
       res.req.body;
@@ -113,6 +114,7 @@ const verifyPayment = async (req, res) => {
     }
     const products = user.cart;
     const fieldsToUpdate = {
+      customerId: req.session.user.mobileNumber,
       paymentId: razorpay_payment_id,
       razorpayOrderId: razorpay_order_id,
       razorpaySignature: razorpay_signature,
@@ -167,7 +169,6 @@ const verifyPayment = async (req, res) => {
           }
         }
 
-        user.orderHistory.push(updatedOrder);
         user.save().then((updatedUser) => {
           console.log(
             "Updated user after saving payment details:",
@@ -201,11 +202,9 @@ const verifyPayment = async (req, res) => {
     }).exec();
     console.log(
       "Redirecting to ",
-      `${process.env.FRONTEND_URL}/success?type=${updatedOrder.orderType}`
+      `${origin}/success?type=${updatedOrder.orderType}`
     );
-    res.redirect(
-      `${process.env.FRONTEND_URL}/success?type=${updatedOrder.orderType}`
-    );
+    res.redirect(`${origin}/success?type=${updatedOrder.orderType}`);
     if (isCouponCodeValid) {
       setTimeout(
         () => addAffiliateAmount(couponCode, couponCodeDiscount),
@@ -245,32 +244,6 @@ const affiliatePayCommission = async (req, res) => {
     console.log("The encrypted Data is ", encryptedData);
     const encryptedBase64 = encryptedData.toString("base64");
     console.log("The encryptedBase64 Data is ", encryptedBase64);
-
-    // const clientIdWithEpochTimestamp =
-    //   clientId + "." + Math.floor(Date.now() / 1000);
-
-    // const publicKeyPath = filePath; // Replace with the absolute path to your public key file
-    // const publicKeyContent = fs
-    //   .readFileSync(publicKeyPath, "utf-8")
-    //   .replace(/[\t\n\r]/g, "")
-    //   .replace("-----BEGIN PUBLIC KEY-----", "")
-    //   .replace("-----END PUBLIC KEY-----", "");
-
-    // const publicKey = `-----BEGIN PUBLIC KEY-----\n${publicKeyContent}\n-----END PUBLIC KEY-----`;
-
-    // const key = crypto.createPublicKey(publicKey);
-    // const buffer = Buffer.from(clientIdWithEpochTimestamp, "utf-8");
-
-    // const encryptedData = crypto.publicEncrypt(
-    //   {
-    //     key: key,
-    //     padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-    //   },
-    //   buffer
-    // );
-
-    // const encryptedSignature = encryptedData.toString("base64");
-    // console.log(encryptedSignature);
 
     const url = "https://payout-gamma.cashfree.com/payout/v1/authorize/";
     const headers = {

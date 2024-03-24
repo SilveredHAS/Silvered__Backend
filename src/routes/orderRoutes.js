@@ -10,7 +10,6 @@ const upload = multer({
 const {
   getOrderHistory,
   getWishList,
-  addOrder,
   addToCart,
   addWishlist,
   deleteWishlist,
@@ -29,7 +28,6 @@ router.get("/get-customization", getCustomization);
 router.get("/get-saved-address", getSavedAddress);
 router.get("/cart-items", getCartItems);
 router.delete("/delete-cart-items/:id", deleteCartItem);
-router.post("/add-to-orders", DecryptMiddleware, addOrder);
 router.put("/update-cart/:id", updateCart);
 router.post("/add-to-cart", DecryptMiddleware, addToCart);
 router.post("/add-to-wishlist", DecryptMiddleware, addWishlist);

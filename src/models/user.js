@@ -8,7 +8,6 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   otp: { type: String },
   isOtpActive: { type: Boolean },
-  orderHistory: [orderSchema],
   wishlist: [String],
   shippingAddresses: [Object],
   cart: [cartSchema],

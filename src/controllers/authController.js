@@ -439,14 +439,6 @@ const getAffiliateEarnings = async (req, res) => {
     if (affiliateUser) {
       affiliateEarnings = affiliateUser.affiliateEarnings;
     }
-
-    // affiliateEarnings = [
-    //   { orderDate: new Date(2024, 0, 2), amount: "2000" },
-    //   { orderDate: new Date(2024, 1, 20), amount: "3000" },
-    //   { orderDate: new Date(2024, 1, 15), amount: "2500" },
-    //   { orderDate: new Date(2024, 0, 24), amount: "260.50" },
-    //   { orderDate: new Date(2024, 0, 10), amount: "2000" },
-    // ];
     console.log(affiliateEarnings);
 
     let totalEarnings = 0;

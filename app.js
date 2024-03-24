@@ -20,6 +20,8 @@ const port = process.env.PORT || 5000;
 // mongodb conn
 mongoConn = connectToMongoDB();
 
+const allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
+
 app.use(
   session({
     secret: "mysecret",
@@ -45,7 +47,14 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.urlencoded({ extended: false }));
 app.use(
   cors({
-    origin: `${process.env.FRONTEND_URL}`,
+    origin: function (origin, callback) {
+      // Check if the origin is in the list of allowed origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );

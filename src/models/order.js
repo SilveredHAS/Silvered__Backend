@@ -3,7 +3,7 @@ const { cartSchema } = require("./cart");
 
 const orderSchema = new mongoose.Schema(
   {
-    products: [cartSchema],
+    customerId: String,
     orderId: String,
     orderType: String,
     dateOfOrder: Date,
@@ -12,6 +12,7 @@ const orderSchema = new mongoose.Schema(
     receiptId: String,
     razorpayOrderId: String,
     razorpayOrderIdStatus: String,
+    products: [cartSchema],
     razorpaySignature: String,
     isPaymentSuccess: Boolean,
     isPaymentVerified: Boolean,

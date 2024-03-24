@@ -12,45 +12,8 @@ const CryptoJS = require("crypto-js");
 const Product = require("../models/product");
 const fs = require("fs");
 const path = require("path");
+const { Order } = require("../models/order");
 
-const addOrder = async (req, res) => {
-  try {
-    console.log("Inside add order route controller");
-    const { mobileNumber, orderItem } = req.body;
-    console.log("Req body is ", req.body);
-    const user = await User.findOne({ mobileNumber });
-    const userId = user._id;
-    console.log("User is ", user);
-    if (!user) {
-      console.log("User not found");
-      return res
-        .status(404)
-        .json({ isSuccess: false, message: "User not found" });
-    }
-    console.log("Order Item is ", orderItem);
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $push: { orderHistory: orderItem } },
-      { new: true } // To return the updated user document
-    );
-    if (updatedUser) {
-      console.log(
-        "Order Item added successfully and Updated user:",
-        updatedUser
-      );
-      return res.status(200).json({
-        isSuccess: true,
-        message: "Success",
-      });
-    }
-  } catch (error) {
-    console.log("Add Order Failed");
-    console.log(error);
-    return res
-      .status(500)
-      .json({ isSuccess: false, message: "Add Order failed" });
-  }
-};
 const addToCart = async (req, res) => {
   try {
     console.log("Inside add order route controller");
@@ -157,19 +120,17 @@ const getOrderHistory = async (req, res) => {
     console.log("Inside get order history route controller");
     const { mobileNumber } = req.query;
     console.log("Req body is ", req.query);
-    const user = await User.findOne({ mobileNumber })
-      .lean()
-      .populate("orderHistory");
-    console.log("User is ", user);
-    if (!user) {
-      console.log("User not found");
+    const orderHistory = await Order.findOne({ customerId: mobileNumber });
+
+    if (!orderHistory) {
+      console.log("orderHistory not found");
       return res
         .status(404)
-        .json({ isSuccess: false, message: "User not found" });
+        .json({ isSuccess: false, message: "orderHistory not found" });
     }
-    console.log("Order History is ", user.orderHistory);
+    console.log("Order History is ", orderHistory);
     const ordersWithProducts = await Promise.all(
-      user.orderHistory
+      orderHistory
         .sort((a, b) => b.dateOfOrder - a.dateOfOrder)
         .filter((order) => order.orderType && order.orderType !== "customize")
         .map(async (order) => {
@@ -400,11 +361,6 @@ const getCartItems = async (req, res) => {
       process.env.SECRET
     ).toString();
     res.status(200).json({ encryptedData });
-    // return res.status(200).json({
-    //   isSuccess: true,
-    //   message: "Success",
-    //   cartItems: user.cart,
-    // });
   } catch (error) {
     console.log("Get Cart Items Failed");
     console.log(error);
@@ -549,9 +505,8 @@ const updateCart = async (req, res) => {
     console.log(req.params);
     console.log(req.body);
     const cartId = req.params.id;
-    const newQuantity = req.body.quantity; // Data to update from request body
+    const { quantity, detailedQuantity, logoName } = req.body; // Data to update from request body
     console.log("The cart Id is ", cartId);
-    console.log("The quantity is ", newQuantity);
 
     const user = await User.findOne({
       mobileNumber: req.session.user.mobileNumber,
@@ -565,7 +520,9 @@ const updateCart = async (req, res) => {
           console.log("Inside If");
           return {
             ...cartItem,
-            quantity: newQuantity,
+            quantity,
+            detailedQuantity,
+            logoName,
           };
         }
         return cartItem;
@@ -616,7 +573,6 @@ const getSavedAddress = async (req, res) => {
 };
 
 module.exports = {
-  addOrder,
   getOrderHistory,
   addWishlist,
   getWishList,
