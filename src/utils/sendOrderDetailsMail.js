@@ -5,7 +5,7 @@ const GetShippingAddress = require("./getShippingAddress");
 
 function formattedSize(detailedQuantity) {
   return detailedQuantity
-    ? Object.entries(item.detailedQuantity)
+    ? Object.entries(detailedQuantity)
         .map(([key, value]) => `${key}-${value}`)
         .join(", ")
     : "";

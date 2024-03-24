@@ -120,7 +120,7 @@ const getOrderHistory = async (req, res) => {
     console.log("Inside get order history route controller");
     const { mobileNumber } = req.query;
     console.log("Req body is ", req.query);
-    const orderHistory = await Order.findOne({ customerId: mobileNumber });
+    const orderHistory = await Order.find({ customerId: mobileNumber }).lean();
 
     if (!orderHistory) {
       console.log("orderHistory not found");
