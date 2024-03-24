@@ -140,7 +140,7 @@ const getAllProductsByCategory = async (req, res) => {
       color,
       sleeve,
       price,
-      sortBy,
+      sortby,
       pageNo,
     } = req.body;
     const itemsPerPage = 20;
@@ -177,13 +177,13 @@ const getAllProductsByCategory = async (req, res) => {
     // }
 
     //sort criteria
-    if (sortBy === "Price:Low to High") {
+    if (sortby[0] === "Price:Low to High") {
       sortCriteria = { price: 1 }; // Sort by price ascending
-    } else if (sortBy === "Price:High to Low") {
+    } else if (sortby[0] === "Price:High to Low") {
       sortCriteria = { sellingPrice: -1 }; // Sort by price ascending
-    } else if (sortBy === "Ratings") {
+    } else if (sortby[0] === "Ratings") {
       sortCriteria = { ratings: -1 }; // Sort by ratings descending
-    } else if (sortBy === "New Arrivals") {
+    } else if (sortby[0] === "New Arrivals") {
       sortCriteria = { createdAt: -1 }; // Sort by time (assuming 'createdAt' field)
     } else {
       sortCriteria = { priority: 1 };

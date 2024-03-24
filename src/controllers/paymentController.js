@@ -7,6 +7,11 @@ const CryptoJS = require("crypto-js");
 const { SendOrderDetailsMail } = require("../utils/sendOrderDetailsMail");
 const { sendMail } = require("../utils/sendMail");
 const { addAffiliateAmount } = require("./authController");
+const crypto = require("crypto");
+const fs = require("fs");
+const cashgramSdk = require("api")("@cashfreedocs-new/v4#i7dxxzloy7ysqr");
+const axios = require("axios");
+const cfSdk = require("cashfree-sdk");
 
 const getOrderId = async (req, res) => {
   try {
@@ -213,7 +218,110 @@ const verifyPayment = async (req, res) => {
   }
 };
 
+const affiliatePayCommission = async (req, res) => {
+  try {
+    console.log("Inside affiliate pay commission controller");
+    const filePath = "E:/Github/Silvered__Backend/key/public_key.pem";
+    let publicKey = null;
+    if (fs.existsSync(filePath)) {
+      publicKey = fs.readFileSync(filePath, "utf-8");
+      console.log("The publicKey Data is", publicKey);
+    } else {
+      console.error("File does not exist:", filePath);
+    }
+    const clientId = "CF10111733CNHC4T7UOMN4OBNU875G";
+    console.log("The clientid is ", clientId);
+    const currentUnixTimestamp = Math.floor(Date.now() / 1000);
+    const appendedClientId = `${clientId}.${currentUnixTimestamp}`;
+    console.log("The appendedClientId Data is ", appendedClientId);
+
+    const encryptedData = crypto.publicEncrypt(
+      {
+        key: publicKey,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      },
+      Buffer.from(appendedClientId, "utf-8")
+    );
+    console.log("The encrypted Data is ", encryptedData);
+    const encryptedBase64 = encryptedData.toString("base64");
+    console.log("The encryptedBase64 Data is ", encryptedBase64);
+
+    // const clientIdWithEpochTimestamp =
+    //   clientId + "." + Math.floor(Date.now() / 1000);
+
+    // const publicKeyPath = filePath; // Replace with the absolute path to your public key file
+    // const publicKeyContent = fs
+    //   .readFileSync(publicKeyPath, "utf-8")
+    //   .replace(/[\t\n\r]/g, "")
+    //   .replace("-----BEGIN PUBLIC KEY-----", "")
+    //   .replace("-----END PUBLIC KEY-----", "");
+
+    // const publicKey = `-----BEGIN PUBLIC KEY-----\n${publicKeyContent}\n-----END PUBLIC KEY-----`;
+
+    // const key = crypto.createPublicKey(publicKey);
+    // const buffer = Buffer.from(clientIdWithEpochTimestamp, "utf-8");
+
+    // const encryptedData = crypto.publicEncrypt(
+    //   {
+    //     key: key,
+    //     padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+    //   },
+    //   buffer
+    // );
+
+    // const encryptedSignature = encryptedData.toString("base64");
+    // console.log(encryptedSignature);
+
+    const url = "https://payout-gamma.cashfree.com/payout/v1/authorize/";
+    const headers = {
+      "X-Client-Id": "CF10111733CNHC4T7UOMN4OBNU875G",
+      "X-Client-Secret":
+        "cfsk_ma_test_829e4d94a80692a94548dbae59d3977b_9e324992",
+      accept: "application/json",
+      "X-Cf-Signature": encryptedBase64,
+      // Add more headers as needed
+    };
+
+    axios
+      .post(url, {
+        headers: headers,
+      })
+      .then((response) => {
+        console.log("The Bearer Token is ", response);
+        res.status(200).json({ msg: response.data });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
+    // const { Payouts } = cfSdk;
+    // const payoutsInstance = new Payouts({
+    //   env: "TEST",
+    //   clientId: "CF10111733CNHC4T7UOMN4OBNU875G",
+    //   clientSecret: "cfsk_ma_test_829e4d94a80692a94548dbae59d3977b_9e324992",
+    //   pathToPublicKey: "E:/Github/Silvered__Backend/key/public_key.pem",
+    //   //"publicKey": "ALTERNATIVE TO SPECIFYING PATH (DIRECTLY PASTE PublicKey)"
+    // });
+
+    // console.log(payoutsInstance);
+
+    // cashgramSdk.auth("CF10111733CNHC4T7UOMN4OBNU875G");
+    // cashgramSdk.auth("cfsk_ma_test_829e4d94a80692a94548dbae59d3977b_9e324992");
+    // cashgramSdk.auth(encryptedBase64);
+    // cashgramSdk
+    //   .generateBearerToken()
+    //   .then(({ data }) => console.log("The Bearer Token is ", data))
+    //   .catch((err) => console.error(err));
+  } catch (error) {
+    console.log("The error is ", error);
+    res
+      .status(500)
+      .json({ error: "Could not process affiliate pay commission" });
+  }
+};
+
 module.exports = {
   getOrderId,
   verifyPayment,
+  affiliatePayCommission,
 };
