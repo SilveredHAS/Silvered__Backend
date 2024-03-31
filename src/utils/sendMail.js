@@ -42,6 +42,7 @@ const sendMail = async (mobileNumber) => {
   const tempStorageDir = path.join(__dirname, relativeTempStorageDir);
   const tempDirForTransaction = path.join(tempStorageDir, mobileNumber);
   let imageFiles = fs.readdirSync(tempDirForTransaction);
+  console.log("Image Files are ", imageFiles);
   console.log(imageFiles);
 
   imageFiles = imageFiles.filter(
