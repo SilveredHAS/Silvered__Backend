@@ -20,7 +20,8 @@ const port = process.env.PORT || 5000;
 // mongodb conn
 mongoConn = connectToMongoDB();
 
-const allowedOrigins = ["http://localhost:3000", "http://localhost:3001"];
+const allowedOrigins = process.env.FRONTEND_URL;
+console.log("Allowed Origin is ", allowedOrigins);
 
 app.use(
   session({

@@ -17,6 +17,10 @@ const {
   checkCurrentUserAffiliate,
   getAffiliateEarnings,
   getIsCouponCodeValid,
+  registerAuthenticationBrands,
+  checkValidMobileNumberBrands,
+  sendOTPBrands,
+  verifyOtpBrands,
 } = require("../controllers/authController");
 const DecryptMiddleware = require("../middleware/decryptMiddlware");
 
@@ -32,14 +36,22 @@ router.post(
   DecryptMiddleware,
   registerAuthenticationAffiliate
 );
+router.post(
+  "/auth/register-brand",
+  DecryptMiddleware,
+  registerAuthenticationBrands
+);
 router.post("/auth/verify-otp", verifyOtp);
 router.post("/auth/verify-otp-affiliate", verifyOtpAffiliate);
+router.post("/auth/verify-otp-brand", verifyOtpBrands);
 router.get("/logout", logoutUser);
 router.get("/getAffiliateEarnings", getAffiliateEarnings);
 router.get("/getIsCouponCodeValid/:couponCode", getIsCouponCodeValid);
 router.post("/check-valid-mobile", checkValidMobileNumber);
 router.post("/check-valid-mobile-affiliate", checkValidMobileNumberAffiliate);
+router.post("/check-valid-mobile-brand", checkValidMobileNumberBrands);
 router.post("/send-otp", sendOTP);
+router.post("/send-otp-brand", sendOTPBrands);
 router.post("/update-password", updatePassword);
 router.post("/update-password-affiliate", updatePasswordAffiliate);
 router.get("/curr-user", checkCurrentUser);

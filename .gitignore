@@ -1,0 +1,19 @@
+# Node.js
+node_modules/
+npm-debug.log
+key/
+tempStorage/
+uploads/
+Procfile/
+package-lock.json
+.env
+
+# Express.js
+/build/
+logs/
+*.log
+/jspm_packages/
+/bower_components/
+/dist/
+.DS_Store
+Thumbs.db
