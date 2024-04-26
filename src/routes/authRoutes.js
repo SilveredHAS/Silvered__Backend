@@ -21,6 +21,7 @@ const {
   checkValidMobileNumberBrands,
   sendOTPBrands,
   verifyOtpBrands,
+  loginAuthenticationBrands,
 } = require("../controllers/authController");
 const DecryptMiddleware = require("../middleware/decryptMiddlware");
 
@@ -30,6 +31,7 @@ router.post(
   DecryptMiddleware,
   loginAuthenticationAffiliate
 );
+router.post("/auth/login-brand", DecryptMiddleware, loginAuthenticationBrands);
 router.post("/auth/register", DecryptMiddleware, registerAuthentication);
 router.post(
   "/auth/register-affiliate",

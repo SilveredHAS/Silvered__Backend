@@ -141,11 +141,11 @@ const getAllProductsByCategory = async (req, res) => {
       sleeve,
       price,
       sortby,
-      pageno,
+      pageNo,
     } = req.body;
     const itemsPerPage = 20;
     const itemsToSkip =
-      pageno === 0 || pageno === null ? 0 : (pageno - 1) * itemsPerPage;
+      pageNo === 0 || pageNo === null ? 0 : (pageNo - 1) * itemsPerPage;
     console.log("Items to skip is ", itemsToSkip);
     let query = {};
     let sortCriteria = {};
@@ -204,7 +204,7 @@ const getAllProductsByCategory = async (req, res) => {
     console.log("Total Products are ", totalProducts);
     const totalPages = Math.ceil(totalProducts / itemsPerPage);
     console.log("Total Pages are ", totalPages);
-    console.log("Current Page No is ", pageno);
+    console.log("Current Page No is ", pageNo);
 
     const sensitiveData = {
       products: filteredProducts,

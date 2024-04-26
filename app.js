@@ -68,6 +68,8 @@ require("./src/config/passportPasswordStrategy")(passport);
 require("./src/config/passportOTPStrategy")(passport);
 require("./src/config/passportPasswordStrategyAffiliate")(passport);
 require("./src/config/passportOTPStrategyAffiliate")(passport);
+require("./src/config/passportPasswordStrategyBrands")(passport);
+require("./src/config/passportOTPStrategyBrands")(passport);
 
 app.use(authRoutes);
 app.use(productRoutes);

@@ -180,6 +180,89 @@ const loginAuthenticationAffiliate = (req, res, next) => {
   }
 };
 
+const loginAuthenticationBrands = (req, res, next) => {
+  try {
+    console.log(
+      "Inside loginAuthenticationBrands function in authController.js"
+    );
+    console.log("Reqbody is ", req.body);
+    const loginType = req.body.type;
+
+    if (loginType === "password") {
+      console.log("Inside loginType password");
+      passport.authenticate("custom-local-brands", async (err, user, info) => {
+        if (err) {
+          return res.status(500).json({ message: "Internal server error" });
+        } else if (
+          info.message ===
+            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+          info.message === "Please enter correct mobile number and Password"
+        ) {
+          return res.status(401).json({ message: info.message });
+        } else if (info.message === "Login Successfull") {
+          const { mobileNumber } = req.body;
+          const user = await BrandUser.findOne({ mobileNumber });
+          console.log("Req is ", req.user);
+          console.log("Req is ", req.isAuthenticated());
+          console.log("Req is ", req.session);
+          req.session.user = {
+            isAuthenticated: true,
+            fullName: user.fullName,
+            mobileNumber: user.mobileNumber,
+            email: user.email,
+            brandName: user.brandName,
+            brandLogo: user.brandLogo,
+          };
+          console.log("Session data after user login is ", req.session);
+          return res
+            .status(200)
+            .json({ message: info.message, userDetails: req.session.user });
+        } else {
+          return res.status(500).json({ message: "Login failed" });
+        }
+      })(req, res, next);
+    } else if (loginType === "otp") {
+      console.log("Inside loginType otp");
+      passport.authenticate("custom-otp-brands", async (err, user, info) => {
+        console.log(err);
+        console.log(info);
+        if (err) {
+          console.log("error inside custom otp and error is ", err);
+          return res.status(500).json({ message: "Internal server error" });
+        } else if (
+          info.message ===
+            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+          info.message === "OTP Expired! Please generate new otp to continue" ||
+          info.message === "Incorrect OTP! Please enter correct OTP."
+        ) {
+          return res.status(401).json({ message: info.message });
+        } else if (info.message === "OTP Verified Successfully") {
+          const { mobileNumber } = req.body;
+          const user = await BrandUser.findOne({ mobileNumber });
+          req.session.user = {
+            isAuthenticated: true,
+            fullName: user.fullName,
+            mobileNumber: user.mobileNumber,
+            email: user.email,
+            brandName: user.brandName,
+            brandLogo: user.brandLogo,
+          };
+          console.log("Session data after user login is ", req.session);
+          return res
+            .status(200)
+            .json({ message: info.message, userDetails: req.session.user });
+        } else {
+          return res.status(500).json({ message: "Login failed" });
+        }
+      })(req, res, next);
+    }
+  } catch (error) {
+    console.log("Login Failed");
+    console.log(error);
+    res.status(500).json({ message: "Login Failed" });
+  }
+};
+
 const registerAuthentication = async (req, res) => {
   try {
     const { fullName, mobileNumber, password } = req.body;
@@ -306,18 +389,12 @@ const registerAuthenticationBrands = async (req, res) => {
     console.log("Account created successfully!");
 
     req.session.user = {
+      isAuthenticated: true,
       fullName,
       mobileNumber,
       email,
       brandName,
       brandLogo,
-      gstNumber,
-      buildingNo,
-      area,
-      town,
-      district,
-      state,
-      password,
     };
     console.log("Session data after user login is ", req.session);
     return res.status(200).json({
@@ -553,6 +630,7 @@ const logoutUser = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error("Error destroying session:", err);
+      nod;
       res.status(500).json({ message: "Logging Out failed" });
     } else {
       console.log("Logged Out Successfully!");
@@ -887,4 +965,5 @@ module.exports = {
   getAffiliateEarnings,
   getIsCouponCodeValid,
   addAffiliateAmount,
+  loginAuthenticationBrands,
 };
