@@ -17,7 +17,7 @@ module.exports = (passport) => {
             console.log("User not found");
             return done(null, false, {
               message:
-                "The entered Mobile do not exist. Please Sign up into Silvered",
+                "The entered Mobile do not exist. Please Sign up into Silvered.",
             });
           }
 

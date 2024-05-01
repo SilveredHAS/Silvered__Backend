@@ -30,7 +30,7 @@ const loginAuthentication = (req, res, next) => {
           return res.status(500).json({ message: "Internal server error" });
         } else if (
           info.message ===
-            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+            "The entered Mobile do not exist. Please Sign up into Silvered." ||
           info.message === "Please enter correct mobile number and Password"
         ) {
           return res.status(401).json({ message: info.message });
@@ -65,7 +65,7 @@ const loginAuthentication = (req, res, next) => {
           return res.status(500).json({ message: "Internal server error" });
         } else if (
           info.message ===
-            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+            "The entered Mobile do not exist. Please Sign up into Silvered." ||
           info.message === "OTP Expired! Please generate new otp to continue" ||
           info.message === "Incorrect OTP! Please enter correct OTP."
         ) {
@@ -113,7 +113,7 @@ const loginAuthenticationAffiliate = (req, res, next) => {
             return res.status(500).json({ message: "Internal server error" });
           } else if (
             info.message ===
-              "The entered Mobile do not exist. Please Sign up into Silvered" ||
+              "The entered Mobile do not exist. Please Sign up into Silvered." ||
             info.message === "Please enter correct mobile number and Password"
           ) {
             return res.status(401).json({ message: info.message });
@@ -149,7 +149,7 @@ const loginAuthenticationAffiliate = (req, res, next) => {
           return res.status(500).json({ message: "Internal server error" });
         } else if (
           info.message ===
-            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+            "The entered Mobile do not exist. Please Sign up into Silvered." ||
           info.message === "OTP Expired! Please generate new otp to continue" ||
           info.message === "Incorrect OTP! Please enter correct OTP."
         ) {
@@ -195,7 +195,7 @@ const loginAuthenticationBrands = (req, res, next) => {
           return res.status(500).json({ message: "Internal server error" });
         } else if (
           info.message ===
-            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+            "The entered Mobile do not exist. Please Sign up into Silvered." ||
           info.message === "Please enter correct mobile number and Password"
         ) {
           return res.status(401).json({ message: info.message });
@@ -231,7 +231,7 @@ const loginAuthenticationBrands = (req, res, next) => {
           return res.status(500).json({ message: "Internal server error" });
         } else if (
           info.message ===
-            "The entered Mobile do not exist. Please Sign up into Silvered" ||
+            "The entered Mobile do not exist. Please Sign up into Silvered." ||
           info.message === "OTP Expired! Please generate new otp to continue" ||
           info.message === "Incorrect OTP! Please enter correct OTP."
         ) {
@@ -350,11 +350,11 @@ const registerAuthenticationAffiliate = async (req, res) => {
 const registerAuthenticationBrands = async (req, res) => {
   try {
     const {
-      fullName,
-      mobileNumber,
-      email,
       brandName,
-      brandLogo,
+      contactPersonFullName,
+      contactPersonMobileNumber,
+      officeContactNumber,
+      email,
       gstNumber,
       buildingNo,
       area,
@@ -362,6 +362,8 @@ const registerAuthenticationBrands = async (req, res) => {
       district,
       state,
       password,
+      brandLogo,
+      shopImages,
     } = req.body;
     console.log(
       "Req body of registerAuthenticationBrands controller is ",
@@ -372,17 +374,19 @@ const registerAuthenticationBrands = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 15);
     console.log("Hashed Password is ", hashedPassword);
     const user = new BrandUser({
-      fullName,
-      mobileNumber,
-      email,
       brandName,
-      brandLogo,
+      contactPersonFullName,
+      contactPersonMobileNumber,
+      officeContactNumber,
+      email,
       gstNumber,
       buildingNo,
       area,
       town,
       district,
       state,
+      brandLogo,
+      shopImages,
       password: hashedPassword,
     });
     await user.save();
@@ -390,11 +394,13 @@ const registerAuthenticationBrands = async (req, res) => {
 
     req.session.user = {
       isAuthenticated: true,
-      fullName,
-      mobileNumber,
-      email,
       brandName,
+      contactPersonFullName,
+      contactPersonMobileNumber,
+      officeContactNumber,
+      email,
       brandLogo,
+      shopImages,
     };
     console.log("Session data after user login is ", req.session);
     return res.status(200).json({
@@ -474,6 +480,7 @@ const checkValidMobileNumberBrands = async (req, res) => {
         isValid: true,
       });
     } else {
+      console.log("The User account do not exist in Silvered Brands");
       return res.status(200).json({
         isValid: false,
       });
@@ -579,8 +586,9 @@ const verifyOtpAffiliate = async (req, res) => {
 
 const verifyOtpBrands = async (req, res) => {
   try {
-    console.log("Req body of verifyOtp is ", req.body);
+    console.log("Req body of verifyOtpBrands is ", req.body);
     const { mobileNumber, otp } = req.body;
+    console.log(mobileNumber, otp);
     const user = await OTPRegisterBrands.findOne({ mobileNumber });
     console.log("User in verifyOtp controller is ", user);
     const otpFromDb = user.otp;
@@ -836,7 +844,7 @@ const sendOTP = async (req, res) => {
 
 const sendOTPBrands = async (req, res) => {
   try {
-    console.log("Inside sendOTP route controller");
+    console.log("Inside sendOTP Brands route controller");
     const { mobileNumber } = req.body;
     console.log("Mobile Number from frontend is ", mobileNumber);
     const otp = GenerateSixDigitOTP();
